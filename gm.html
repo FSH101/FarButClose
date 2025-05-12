@@ -3,17 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Ball Control with Lights and Objects</title>
+    <title>3D Ball Control with Touch</title>
     <style>
         body { margin: 0; overflow: hidden; display: flex; flex-direction: column; }
         canvas { display: block; }
+        
+        /* Сенсорные триггеры */
+        .left-trigger, .right-trigger {
+            position: absolute;
+            bottom: 20px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: rgba(0, 123, 255, 0.6);
+            touch-action: none; /* Отключаем стандартные действия на мобильных устройствах */
+        }
+
+        /* Левый триггер */
+        .left-trigger {
+            left: 20px;
+        }
+
+        /* Правый триггер */
+        .right-trigger {
+            right: 20px;
+        }
+
+        /* Кнопки для управления (управление движением) */
         .button-container {
             position: fixed;
-            bottom: 20px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
             display: flex;
-            gap: 10px;
+            gap: 20px;
+            flex-direction: column;
         }
         .button {
             padding: 15px;
@@ -43,99 +67,67 @@
         const ball = new THREE.Mesh(geometry, material);
         scene.add(ball);
 
-        // Куб
-        const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-        const cubeMaterial = new THREE.MeshLambertMaterial({ color: 0xFF5733 });
-        const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-        cube.position.set(3, 0, 0);
-        scene.add(cube);
-
-        // Цилиндр
-        const cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 32);
-        const cylinderMaterial = new THREE.MeshLambertMaterial({ color: 0x33FF57 });
-        const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-        cylinder.position.set(-3, 0, 0);
-        scene.add(cylinder);
-
         // Камера от третьего лица
         camera.position.z = 5;
 
         // Добавляем свет
         const ambientLight = new THREE.AmbientLight(0x404040, 2);  // мягкий свет
         scene.add(ambientLight);
-        
+
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // Направленный свет
         directionalLight.position.set(5, 5, 5).normalize();
         scene.add(directionalLight);
 
-        // Управление с кнопками
-        let forward = false;
-        let rotateLeft = false;
-        let rotateRight = false;
+        // Переменные для движения и поворота камеры
+        let moveZ = 0; // Движение вперед и назад
+        let cameraRotationX = 0; // Поворот камеры по оси X (вверх/вниз)
+        let cameraRotationY = 0; // Поворот камеры по оси Y (влево/вправ)
 
-        // Кнопки для управления
-        const buttonContainer = document.createElement('div');
-        buttonContainer.classList.add('button-container');
+        // Создаем сенсорные триггеры
+        const leftTrigger = document.createElement('div');
+        leftTrigger.classList.add('left-trigger');
+        document.body.appendChild(leftTrigger);
 
-        const forwardButton = document.createElement('button');
-        forwardButton.classList.add('button');
-        forwardButton.textContent = 'Вперед';
-        forwardButton.addEventListener('click', () => { forward = true; });
+        const rightTrigger = document.createElement('div');
+        rightTrigger.classList.add('right-trigger');
+        document.body.appendChild(rightTrigger);
 
-        const rotateLeftButton = document.createElement('button');
-        rotateLeftButton.classList.add('button');
-        rotateLeftButton.textContent = 'Поворот влево';
-        rotateLeftButton.addEventListener('click', () => { rotateLeft = true; });
+        // Обработчики сенсорных триггеров
+        leftTrigger.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moveZ = 0.1; // Двигаем шар вперед
+        });
 
-        const rotateRightButton = document.createElement('button');
-        rotateRightButton.classList.add('button');
-        rotateRightButton.textContent = 'Поворот вправо';
-        rotateRightButton.addEventListener('click', () => { rotateRight = true; });
+        leftTrigger.addEventListener('touchend', () => {
+            moveZ = 0; // Останавливаем движение
+        });
 
-        buttonContainer.appendChild(forwardButton);
-        buttonContainer.appendChild(rotateLeftButton);
-        buttonContainer.appendChild(rotateRightButton);
-        document.body.appendChild(buttonContainer);
+        rightTrigger.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            cameraRotationY = 0.05; // Поворот камеры вправо
+        });
 
-        // Анимация и обновление сцены
+        rightTrigger.addEventListener('touchend', () => {
+            cameraRotationY = 0; // Останавливаем поворот
+        });
+
+        // Функция обновления
         function animate() {
             requestAnimationFrame(animate);
 
-            // Движение шара вперед
-            if (forward) {
-                ball.position.z -= 0.1;
-                forward = false; // Останавливаем движение после одного шага
-            }
+            // Обновляем движение шара
+            ball.position.z += moveZ;
 
-            // Поворот камеры влево
-            if (rotateLeft) {
-                camera.rotation.y += 0.1;
-                rotateLeft = false; // Останавливаем поворот после одного шага
-            }
+            // Поворот камеры
+            camera.rotation.x += cameraRotationX;
+            camera.rotation.y += cameraRotationY;
 
-            // Поворот камеры вправо
-            if (rotateRight) {
-                camera.rotation.y -= 0.1;
-                rotateRight = false; // Останавливаем поворот после одного шага
-            }
-
-            // Плавное вращение шара, куба и цилиндра
-            ball.rotation.x += 0.01;
-            ball.rotation.y += 0.01;
-
-            cube.rotation.x += 0.02;
-            cube.rotation.y += 0.02;
-
-            cylinder.rotation.x += 0.03;
-            cylinder.rotation.y += 0.03;
-
-            // Рендерим сцену
+            // Рендеринг сцены
             renderer.render(scene, camera);
         }
-
         animate();
 
-        // Адаптивность под размер экрана
+        // Обработка изменения размера окна
         window.addEventListener('resize', () => {
             renderer.setSize(window.innerWidth, window.innerHeight);
             camera.aspect = window.innerWidth / window.innerHeight;
