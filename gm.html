@@ -3,10 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Ball Control Test</title>
+    <title>3D Ball Control with Lights and Objects</title>
     <style>
-        body { margin: 0; overflow: hidden; }
+        body { margin: 0; overflow: hidden; display: flex; flex-direction: column; }
         canvas { display: block; }
+        .button-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        .button {
+            padding: 15px;
+            font-size: 18px;
+            background-color: #0077ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -20,29 +37,97 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Создаем шар (сферу)
+        // Шар
         const geometry = new THREE.SphereGeometry(1, 32, 32);
         const material = new THREE.MeshBasicMaterial({ color: 0x0077ff });
         const ball = new THREE.Mesh(geometry, material);
         scene.add(ball);
 
+        // Куб
+        const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+        const cubeMaterial = new THREE.MeshLambertMaterial({ color: 0xFF5733 });
+        const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube.position.set(3, 0, 0);
+        scene.add(cube);
+
+        // Цилиндр
+        const cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 32);
+        const cylinderMaterial = new THREE.MeshLambertMaterial({ color: 0x33FF57 });
+        const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+        cylinder.position.set(-3, 0, 0);
+        scene.add(cylinder);
+
         // Камера от третьего лица
         camera.position.z = 5;
 
         // Добавляем свет
-        const light = new THREE.AmbientLight(0x404040);  // мягкий свет
-        scene.add(light);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(1, 1, 1).normalize();
+        const ambientLight = new THREE.AmbientLight(0x404040, 2);  // мягкий свет
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // Направленный свет
+        directionalLight.position.set(5, 5, 5).normalize();
         scene.add(directionalLight);
 
-        // Функция анимации
+        // Управление с кнопками
+        let forward = false;
+        let rotateLeft = false;
+        let rotateRight = false;
+
+        // Кнопки для управления
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('button-container');
+
+        const forwardButton = document.createElement('button');
+        forwardButton.classList.add('button');
+        forwardButton.textContent = 'Вперед';
+        forwardButton.addEventListener('click', () => { forward = true; });
+
+        const rotateLeftButton = document.createElement('button');
+        rotateLeftButton.classList.add('button');
+        rotateLeftButton.textContent = 'Поворот влево';
+        rotateLeftButton.addEventListener('click', () => { rotateLeft = true; });
+
+        const rotateRightButton = document.createElement('button');
+        rotateRightButton.classList.add('button');
+        rotateRightButton.textContent = 'Поворот вправо';
+        rotateRightButton.addEventListener('click', () => { rotateRight = true; });
+
+        buttonContainer.appendChild(forwardButton);
+        buttonContainer.appendChild(rotateLeftButton);
+        buttonContainer.appendChild(rotateRightButton);
+        document.body.appendChild(buttonContainer);
+
+        // Анимация и обновление сцены
         function animate() {
             requestAnimationFrame(animate);
 
-            // Плавное вращение шара для теста
+            // Движение шара вперед
+            if (forward) {
+                ball.position.z -= 0.1;
+                forward = false; // Останавливаем движение после одного шага
+            }
+
+            // Поворот камеры влево
+            if (rotateLeft) {
+                camera.rotation.y += 0.1;
+                rotateLeft = false; // Останавливаем поворот после одного шага
+            }
+
+            // Поворот камеры вправо
+            if (rotateRight) {
+                camera.rotation.y -= 0.1;
+                rotateRight = false; // Останавливаем поворот после одного шага
+            }
+
+            // Плавное вращение шара, куба и цилиндра
             ball.rotation.x += 0.01;
             ball.rotation.y += 0.01;
+
+            cube.rotation.x += 0.02;
+            cube.rotation.y += 0.02;
+
+            cylinder.rotation.x += 0.03;
+            cylinder.rotation.y += 0.03;
 
             // Рендерим сцену
             renderer.render(scene, camera);
