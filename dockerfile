@@ -4,14 +4,14 @@ FROM php:7.4-apache
 # Устанавливаем необходимые расширения PHP для работы с MySQL
 RUN docker-php-ext-install mysqli pdo pdo_mysql
 
-# Устанавливаем phpMyAdmin
+# Обновляем систему и устанавливаем зависимости для скачивания phpMyAdmin
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
-    && wget https://files.phpmyadmin.net/phpMyAdmin/latest-english.tar.gz \
-    && tar -xvzf latest-english.tar.gz \
-    && mv phpMyAdmin-* /var/www/html/phpmyadmin \
-    && rm -rf latest-english.tar.gz
+    && wget https://files.phpmyadmin.net/phpMyAdmin/5.1.1/phpMyAdmin-5.1.1-all-languages.tar.gz \
+    && tar -xvzf phpMyAdmin-5.1.1-all-languages.tar.gz \
+    && mv phpMyAdmin-5.1.1-all-languages /var/www/html/phpmyadmin \
+    && rm -rf phpMyAdmin-5.1.1-all-languages.tar.gz
 
 # Копируем файлы проекта в контейнер
 COPY . /var/www/html/
