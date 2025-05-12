@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Far But Close</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #fbd3e9, #bb377d);
+      color: white;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    .user-info, .coins {
+      font-size: 16px;
+    }
+    .main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px;
+    }
+    .button {
+      margin: 15px;
+      padding: 14px 28px;
+      background-color: #ffffff20;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .button:hover {
+      background-color: #ffffff40;
+    }
+    canvas {
+      margin-top: 30px;
+    }
+  </style>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <header>
+    <div class="user-info" id="userInfo">Вы: ... | Партнёр: ...</div>
+    <div class="coins">Монеты: <span id="coinCount">0</span></div>
+  </header>
+
+  <div class="main">
+    <h1>Far But Close</h1>
+    <button class="button" onclick="openDailyQuest()">Ежедневное задание</button>
+    <button class="button" onclick="openStore()">Магазин</button>
+    <button class="button" onclick="openTree()">Дерево отношений</button>
+
+    <canvas id="javaCanvas" width="300" height="200">Ваш браузер не поддерживает canvas</canvas>
+  </div>
+
+  <script>
+    // Получаем имя из Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    const user = tg.initDataUnsafe?.user;
+    if (user) {
+      document.getElementById("userInfo").innerText =
+        `Вы: ${user.first_name} | Партнёр: (не назначен)`;
+    }
+
+    function openDailyQuest() {
+      window.location.href = "/quests/today.html"; // Заглушка
+    }
+
+    function openStore() {
+      alert("Магазин скоро доступен");
+    }
+
+    function openTree() {
+      alert("Дерево в разработке");
+    }
+
+    // Сюда подключим Java через WebAssembly или canvas-анимации позже
+    const canvas = document.getElementById("javaCanvas");
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fillRect(20, 20, 260, 160);
+    ctx.font = "18px sans-serif";
+    ctx.fillStyle = "white";
+    ctx.fillText("Тут будет Java-анимация", 40, 110);
+  </script>
+</body>
+</html>
