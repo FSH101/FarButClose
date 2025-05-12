@@ -1,98 +1,154 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Far But Close</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #fbd3e9, #bb377d);
-      color: white;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 30px;
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-    .user-info, .coins {
-      font-size: 16px;
-    }
-    .main {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 60px 20px;
-    }
-    .button {
-      margin: 15px;
-      padding: 14px 28px;
-      background-color: #ffffff20;
-      border: none;
-      border-radius: 12px;
-      color: white;
-      font-size: 18px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .button:hover {
-      background-color: #ffffff40;
-    }
-    canvas {
-      margin-top: 30px;
-    }
-  </style>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Far But Close Игра</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .header .user-info span {
+            margin-left: 10px;
+        }
+        .coin-display {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .coin-display span {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 20px;
+        }
+        .content button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .content button:hover {
+            background-color: #45a049;
+        }
+        /* Стили для канваса */
+        #canvas-container {
+            width: 100%;
+            height: 300px;
+            background-color: #e0e0e0;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <div class="user-info" id="userInfo">Вы: ... | Партнёр: ...</div>
-    <div class="coins">Монеты: <span id="coinCount">0</span></div>
-  </header>
 
-  <div class="main">
-    <h1>Far But Close</h1>
-    <button class="button" onclick="openDailyQuest()">Ежедневное задание</button>
-    <button class="button" onclick="openStore()">Магазин</button>
-    <button class="button" onclick="openTree()">Дерево отношений</button>
+    <!-- Header Section -->
+    <div class="header">
+        <div class="user-info">
+            <span id="username">Загрузка...</span>
+            <span>-</span>
+            <span id="partner-name">Нет партнера</span>
+        </div>
+        <div class="coin-display">
+            <span id="coins">0 монет</span>
+        </div>
+    </div>
 
-    <canvas id="javaCanvas" width="300" height="200">Ваш браузер не поддерживает canvas</canvas>
-  </div>
+    <!-- 3D Scene Section -->
+    <div id="canvas-container"></div>
 
-  <script>
-    // Получаем имя из Telegram WebApp
-    const tg = window.Telegram.WebApp;
-    tg.ready();
+    <!-- Main Content Section -->
+    <div class="content">
+        <button id="add-partner-btn">Добавить партнера</button>
+        <button id="start-quest-btn">Начать квест</button>
+        <button id="daily-task-btn">Ежедневное задание</button>
+        <button id="shop-btn">Перейти в магазин</button>
+    </div>
 
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-      document.getElementById("userInfo").innerText =
-        `Вы: ${user.first_name} | Партнёр: (не назначен)`;
-    }
+    <!-- Telegram API -->
+    <script>
+        // Инициализация Telegram API
+        window.onload = function() {
+            // Проверим, был ли доступ к Telegram API
+            if (window.Telegram.WebApp) {
+                const username = window.Telegram.WebApp.initDataUnsafe.user.first_name;
+                document.getElementById("username").innerText = username;
 
-    function openDailyQuest() {
-      window.location.href = "/quests/today.html"; // Заглушка
-    }
+                // Получаем информацию о партнере и монетах
+                document.getElementById("coins").innerText = "100 монет";  // Пример монет
+            }
+        }
 
-    function openStore() {
-      alert("Магазин скоро доступен");
-    }
+        // Обработчик нажатия кнопки для добавления партнера
+        document.getElementById("add-partner-btn").addEventListener("click", function() {
+            // Здесь можно интегрировать функцию для добавления партнера через Telegram
+            document.getElementById("partner-name").innerText = "Партнер добавлен";
+        });
 
-    function openTree() {
-      alert("Дерево в разработке");
-    }
+        // Обработчик нажатия кнопки для начала квеста
+        document.getElementById("start-quest-btn").addEventListener("click", function() {
+            alert("Квест начат!");
+        });
 
-    // Сюда подключим Java через WebAssembly или canvas-анимации позже
-    const canvas = document.getElementById("javaCanvas");
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
-    ctx.fillRect(20, 20, 260, 160);
-    ctx.font = "18px sans-serif";
-    ctx.fillStyle = "white";
-    ctx.fillText("Тут будет Java-анимация", 40, 110);
-  </script>
+        // Обработчик нажатия кнопки для ежедневного задания
+        document.getElementById("daily-task-btn").addEventListener("click", function() {
+            alert("Ежедневное задание выполнено!");
+        });
+
+        // Обработчик нажатия кнопки для перехода в магазин
+        document.getElementById("shop-btn").addEventListener("click", function() {
+            alert("Перехожу в магазин!");
+        });
+    </script>
+
+    <!-- 3D Scene with Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Инициализация сцены Three.js
+        let scene = new THREE.Scene();
+        let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, 300);  // Установим размер канваса
+        document.getElementById("canvas-container").appendChild(renderer.domElement);
+
+        // Куб
+        let geometry = new THREE.BoxGeometry();
+        let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        let cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+
+        camera.position.z = 5;
+
+        // Анимация
+        function animate() {
+            requestAnimationFrame(animate);
+
+            cube.rotation.x += 0.01;
+            cube.rotation.y += 0.01;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+
 </body>
 </html>
