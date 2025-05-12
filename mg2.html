@@ -51,16 +51,16 @@
 
     let draggedPiece = null;
 
-    // Загрузка изображений пазлов
+    // Загрузка изображений пазлов (для теста используем заглушку)
     const heartImage = new Image();
-    heartImage.src = 'https://www.freeiconspng.com/img/38786'; // Замените на реальный URL изображения
+    heartImage.src = 'https://via.placeholder.com/400x400.png?text=Heart+Image'; // Заглушка
 
     heartImage.onload = () => {
       pieces.forEach((piece, index) => {
         piece.img = heartImage;
         piece.x = 50 + (index % 2) * 150; // Позиции для пазлов
         piece.y = 50 + Math.floor(index / 2) * 150;
-        ctx.drawImage(piece.img, piece.x, piece.y, piece.width, piece.height);
+        ctx.drawImage(piece.img, piece.x, piece.y, piece.width, piece.height, 0, 0, heartImage.width, heartImage.height);
       });
     };
 
