@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мини-игра: Найди правильный цвет</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f2f2f2;
+        }
+        .game-container {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            color: white;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        .game-container h1 {
+            font-size: 2em;
+        }
+        .color-options {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .color-option {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .result-message {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .button {
+            background-color: #FF6347;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .button:hover {
+            background-color: #e55347;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Найди правильный цвет!</h1>
+        <p>Выберите цвет, который отображается ниже</p>
+        <div class="color-options">
+            <div class="color-option" style="background-color: red;" onclick="checkAnswer('red')"></div>
+            <div class="color-option" style="background-color: green;" onclick="checkAnswer('green')"></div>
+            <div class="color-option" style="background-color: blue;" onclick="checkAnswer('blue')"></div>
+            <div class="color-option" style="background-color: yellow;" onclick="checkAnswer('yellow')"></div>
+        </div>
+        <div class="result-message" id="resultMessage"></div>
+        <button class="button" id="nextBtn" style="display: none;" onclick="goToMain()">Вернуться на главную</button>
+    </div>
+
+    <script>
+        // Сгенерировать правильный цвет
+        const correctColor = ['red', 'green', 'blue', 'yellow'][Math.floor(Math.random() * 4)];
+        console.log("Правильный цвет:", correctColor); // Для тестирования
+
+        function checkAnswer(selectedColor) {
+            const resultMessage = document.getElementById('resultMessage');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (selectedColor === correctColor) {
+                resultMessage.innerHTML = "Поздравляем, вы выбрали правильный цвет!";
+            } else {
+                resultMessage.innerHTML = "Увы, это не правильный цвет. Попробуйте снова!";
+            }
+
+            // Показать кнопку перехода на главную страницу через 2 секунды
+            setTimeout(function() {
+                nextBtn.style.display = 'inline-block';
+            }, 2000);
+        }
+
+        // Функция для перехода на главный экран
+        function goToMain() {
+            window.location.href = "index.html"; // Главная страница
+        }
+    </script>
+
+</body>
+</html>
