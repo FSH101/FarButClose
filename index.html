@@ -44,7 +44,6 @@
     #threeDCanvas {
       width: 100%;
       height: 400px;
-      background: #000;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -93,6 +92,10 @@
     function initialize3DScene() {
       // Сцена
       const scene = new THREE.Scene();
+
+      // Меняем фон сцены
+      scene.background = new THREE.Color(0x87cefa);  // Голубой фон
+
       const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
       
       // Рендерер
