@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Far But Close</title>
   <style>
     body {
@@ -10,122 +10,112 @@
       font-family: "Segoe UI", sans-serif;
       background: linear-gradient(135deg, #fbd3e9, #bb377d);
       color: white;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 30px;
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-    .user-info, .coins {
-      font-size: 16px;
-    }
-    .main {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 60px 20px;
+      justify-content: center;
+      height: 100vh;
     }
-    .button {
-      margin: 15px;
-      padding: 14px 28px;
-      background-color: #ffffff20;
-      border: none;
-      border-radius: 12px;
-      color: white;
+    h1 {
+      margin-bottom: 10px;
+    }
+    .info {
+      margin-bottom: 20px;
       font-size: 18px;
-      cursor: pointer;
-      transition: background 0.3s;
     }
-    .button:hover {
-      background-color: #ffffff40;
+    .pulse {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.2);
+      animation: pulse 2s infinite;
     }
-    #threeDCanvas {
-      width: 100%;
-      height: 400px;
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 0.7;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 0.7;
+      }
+    }
+    #formContainer {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <header>
-    <div class="user-info" id="userInfo">Вы: ... | Партнёр: ...</div>
-    <div class="coins">Монеты: <span id="coinCount">0</span></div>
-  </header>
 
-  <div class="main">
-    <h1>Far But Close</h1>
-    <button class="button" onclick="openDailyQuest()">Ежедневное задание</button>
-    <button class="button" onclick="openStore()">Магазин</button>
-    <button class="button" onclick="openTree()">Дерево отношений</button>
+  <div id="mainContainer">
+    <div class="pulse"></div>
+    <h1>Добро пожаловать, <span id="userName">...</span></h1>
+    <div class="info" id="relationshipInfo">Загрузка данных...</div>
+  </div>
 
-    <div id="threeDCanvas"></div>
+  <div id="formContainer">
+    <h2>Добавление партнёра</h2>
+    <input type="text" id="partnerName" placeholder="Имя партнёра" required />
+    <input type="date" id="startDate" required />
+    <button onclick="submitForm()">Сохранить</button>
   </div>
 
   <script>
-    // Получаем имя из Telegram WebApp
     const tg = window.Telegram.WebApp;
     tg.ready();
 
     const user = tg.initDataUnsafe?.user;
-    if (user) {
-      document.getElementById("userInfo").innerText =
-        `Вы: ${user.first_name} | Партнёр: (не назначен)`;
+    const userName = user?.first_name || "Гость";
+    document.getElementById("userName").innerText = userName;
+
+    fetch("load_user.php?user_id=" + user?.id)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.partner && data.date) {
+          const partner = data.partner;
+          const date = new Date(data.date);
+          const now = new Date();
+          const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+          document.getElementById("relationshipInfo").innerText =
+            `Вы с ${partner} вместе уже ${diff} дней`;
+        } else {
+          document.getElementById("mainContainer").style.display = "none";
+          document.getElementById("formContainer").style.display = "flex";
+        }
+      })
+      .catch(() => {
+        document.getElementById("mainContainer").style.display = "none";
+        document.getElementById("formContainer").style.display = "flex";
+      });
+
+    function submitForm() {
+      const partner = document.getElementById("partnerName").value;
+      const date = document.getElementById("startDate").value;
+      fetch("save_user.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: user?.id,
+          partner: partner,
+          date: date,
+        }),
+      }).then(() => location.reload());
     }
-
-    function openDailyQuest() {
-      window.location.href = "/quests/today.html"; // Заглушка
-    }
-
-    function openStore() {
-      alert("Магазин скоро доступен");
-    }
-
-    function openTree() {
-      document.getElementById("threeDCanvas").style.display = "block";
-      initialize3DScene();  // Запуск 3D сцены
-    }
-
-    // Создание 3D сцены с three.js
-    function initialize3DScene() {
-      // Сцена
-      const scene = new THREE.Scene();
-
-      // Меняем фон сцены
-      scene.background = new THREE.Color(0x87cefa);  // Голубой фон
-
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      
-      // Рендерер
-      const renderer = new THREE.WebGLRenderer();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.getElementById("threeDCanvas").appendChild(renderer.domElement);
-
-      // Куб
-      const geometry = new THREE.BoxGeometry();
-      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-      const cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
-
-      // Камера
-      camera.position.z = 5;
-
-      // Анимация
-      function animate() {
-        requestAnimationFrame(animate);
-
-        // Вращение куба
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-
-        renderer.render(scene, camera);
-      }
-
-      animate();
-    }
-
   </script>
 </body>
 </html>
