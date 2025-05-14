@@ -6,12 +6,132 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body { font-family: sans-serif; text-align: center; background: #fafafa; padding: 20px; }
-    input, button, textarea { padding: 10px; margin: 10px auto; width: 90%; max-width: 400px; display: block; }
-    .hidden { display: none; }
-    .avatar { border-radius: 50%; width: 80px; height: 80px; object-fit: cover; margin-bottom: 10px; }
-    .entry { background: #fff; border: 1px solid #ddd; margin: 10px auto; padding: 10px; border-radius: 8px; width: 90%; max-width: 400px; text-align: left; }
-    .quest { background: #f0f0f0; padding: 20px; margin-top: 20px; border-radius: 8px; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #a56eff 0%, #7c3aed 100%);
+      color: #fff;
+    }
+
+    h2, h3, p {
+      margin: 0 0 10px;
+      padding: 0;
+    }
+
+    #register, #main {
+      padding: 20px;
+      max-width: 420px;
+      margin: 0 auto 80px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      color: #333;
+      margin-top: 20px;
+    }
+
+    input, button, textarea {
+      padding: 12px 16px;
+      margin: 10px 0;
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #7c3aed;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #6b21a8;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .avatar {
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      margin: 20px auto;
+      display: block;
+      border: 3px solid #7c3aed;
+    }
+
+    .entry {
+      background: #f9f9f9;
+      border: 1px solid #eee;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 12px;
+      color: #333;
+    }
+
+    .quest {
+      background: #ede9fe;
+      color: #333;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 16px;
+    }
+
+    #activityFeed .entry {
+      background: #f3f0ff;
+      border-left: 4px solid #7c3aed;
+    }
+
+    #questsList .entry {
+      background: #f5f3ff;
+    }
+
+    #regError {
+      color: red;
+      font-size: 14px;
+    }
+
+    /* Нижняя навигация */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 60px;
+      z-index: 1000;
+    }
+
+    .bottom-nav button {
+      all: unset;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .bottom-nav button.active {
+      color: #7c3aed;
+      font-weight: bold;
+    }
+
+    .bottom-nav button img {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 4px;
+    }
   </style>
 </head>
 <body>
@@ -24,7 +144,7 @@
     <input type="text" id="partner" placeholder="Имя партнёра">
     <input type="date" id="startDate">
     <button onclick="registerUser()">Начать</button>
-    <div id="regError" style="color: red;"></div>
+    <div id="regError"></div>
   </div>
 
   <!-- Главный экран -->
@@ -39,12 +159,10 @@
     <button onclick="addActivity()">Добавить в ленту</button>
     <div id="activityFeed"></div>
 
-    <!-- Кнопка для начала квеста -->
     <h3>Доступные квесты</h3>
     <div id="questsList"></div>
     <button onclick="startQuest()">Начать квест</button>
 
-    <!-- Квест -->
     <div id="quest" class="hidden quest">
       <h3 id="questTitle"></h3>
       <p id="questDescription"></p>
@@ -52,6 +170,29 @@
       <button onclick="submitQuestAnswer()">Отправить</button>
       <div id="questResult"></div>
     </div>
+  </div>
+
+  <!-- Нижняя навигация -->
+  <div class="bottom-nav">
+    <button class="active">
+      <img src="https://img.icons8.com/ios-filled/50/7c3aed/map-marker.png" alt="Места" />
+      Места
+    </button>
+    <button>
+      <img src="https://img.icons8.com/ios-filled/50/7c3aed/activity-feed.png" alt="Лента" />
+      Лента
+    </button>
+    <button>
+      <img src="https://img.icons8.com/ios-filled/50/7c3aed/infinity.png" alt="Главная" />
+    </button>
+    <button>
+      <img src="https://img.icons8.com/ios-filled/50/7c3aed/hearts.png" alt="Лайки" />
+      Лайки
+    </button>
+    <button>
+      <img src="https://img.icons8.com/ios-filled/50/7c3aed/user.png" alt="Профиль" />
+      Профиль
+    </button>
   </div>
 
   <script>
@@ -138,7 +279,6 @@
       });
     }
 
-    // === ИСПРАВЛЕННАЯ ФУНКЦИЯ ===
     async function addActivity() {
       const activityText = document.getElementById('activityText').value.trim();
       if (!activityText) {
