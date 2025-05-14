@@ -40,6 +40,8 @@
     <div id="activityFeed"></div>
 
     <!-- Кнопка для начала квеста -->
+    <h3>Доступные квесты</h3>
+    <div id="questsList"></div>
     <button onclick="startQuest()">Начать квест</button>
 
     <!-- Квест -->
@@ -142,27 +144,34 @@
       try {
         const res = await fetch('quests.json');
         quests = await res.json();
+        displayQuestList();
       } catch (e) {
         console.error('Ошибка при загрузке квестов:', e);
       }
     }
 
-    // Функция для начала квеста
-    function startQuest() {
-      if (quests.length === 0) {
-        document.getElementById('quest').classList.remove('hidden');
-        document.getElementById('questTitle').innerText = "Нет доступных квестов";
-        document.getElementById('questDescription').innerText = "Попробуйте позже.";
-        return;
-      }
+    // Отображаем список квестов
+    function displayQuestList() {
+      const questsList = document.getElementById('questsList');
+      questsList.innerHTML = '';
+      quests.forEach(quest => {
+        const questItem = document.createElement('div');
+        questItem.classList.add('entry');
+        questItem.innerHTML = `<b>${quest.title}</b><br>${quest.description}`;
+        const startButton = document.createElement('button');
+        startButton.innerText = 'Начать квест';
+        startButton.onclick = () => startSpecificQuest(quest);
+        questItem.appendChild(startButton);
+        questsList.appendChild(questItem);
+      });
+    }
 
-      // Выбираем случайный квест из массива
-      const randomQuest = quests[Math.floor(Math.random() * quests.length)];
-      currentQuest = randomQuest;
-
+    // Функция для начала конкретного квеста
+    function startSpecificQuest(quest) {
+      currentQuest = quest;
       document.getElementById('quest').classList.remove('hidden');
-      document.getElementById('questTitle').innerText = randomQuest.title;
-      document.getElementById('questDescription').innerText = randomQuest.description;
+      document.getElementById('questTitle').innerText = quest.title;
+      document.getElementById('questDescription').innerText = quest.description;
       document.getElementById('questResult').innerText = '';
       document.getElementById('questAnswer').value = '';
     }
