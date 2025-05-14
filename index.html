@@ -150,9 +150,31 @@ async function addActivity() {
   const activityPayload = {
     user_id: userData.user_id,
     name: userData.name,
-    text: activityText,
-    time: new Date().toLocaleString(),
+    entry: {
+      text: activityText,
+      time: new Date().toLocaleString()
+    }
   };
+
+  try {
+    const res = await fetch('save_activity.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(activityPayload)
+    });
+
+    const text = await res.text();
+    if (text.trim() === "OK") {
+      document.getElementById('activityText').value = '';
+      loadActivity();
+    } else {
+      alert('Ошибка при сохранении активности: ' + text);
+    }
+  } catch (e) {
+    alert('Ошибка при отправке данных на сервер');
+    console.error(e);
+  }
+}
 
   // Отправляем данные о новой активности на сервер
   try {
