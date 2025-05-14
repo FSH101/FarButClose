@@ -1,199 +1,166 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Far But Close</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
       margin: 0;
+      font-family: "Segoe UI", sans-serif;
       background: linear-gradient(135deg, #fbd3e9, #bb377d);
-      color: #fff;
+      color: white;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    .main {
       padding: 20px;
     }
-    #app {
-      max-width: 500px;
-      margin: auto;
-    }
-    #welcome, #mainScreen {
-      display: none;
-    }
-    .user-info {
+    .tabs {
       display: flex;
-      align-items: center;
       gap: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
-    .user-info img {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #fff;
+    .tab-button {
+      padding: 10px 16px;
+      background-color: #ffffff20;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+    }
+    .tab-button.active {
+      background-color: #ffffff40;
+    }
+    #feed {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    #feed p {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    #newPost {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
     textarea {
       width: 100%;
       height: 60px;
       padding: 10px;
+      font-family: inherit;
       font-size: 16px;
-      border-radius: 6px;
       border: none;
-      resize: none;
-      margin-top: 10px;
+      border-radius: 6px;
     }
-    button {
+    button.send {
       background-color: #ffffff30;
-      color: white;
-      padding: 10px 16px;
       border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 10px;
-    }
-    #activityFeed {
-      margin-top: 20px;
-    }
-    .activity-item {
-      background: rgba(255,255,255,0.15);
       padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .activity-item img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 1px solid #fff;
+      border-radius: 6px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div id="welcome">
-      <h2>Добро пожаловать в Far But Close</h2>
-      <p>Это приложение для пар, которые далеко друг от друга.</p>
-      <div class="user-info">
-        <img id="avatarPreview" src="" alt="avatar" />
-        <span id="userName"></span>
-      </div>
-      <button onclick="registerUser()">Начать</button>
+  <header>
+    <div>Вы: <span id="userName">...</span> | Партнёр: <span id="partnerName">не назначен</span></div>
+    <div>Монеты: <span id="coinCount">0</span></div>
+  </header>
+
+  <div class="main">
+    <div class="tabs">
+      <button class="tab-button active" onclick="switchFeed('public')">Общая лента</button>
+      <button class="tab-button" onclick="switchFeed('private')">Личная лента</button>
     </div>
 
-    <div id="mainScreen">
-      <div class="user-info">
-        <img id="userAvatar" src="" />
-        <div>
-          <strong id="userDisplayName"></strong><br>
-          <span id="userIdDisplay"></span>
-        </div>
-      </div>
+    <div id="feed"></div>
 
-      <h3>Лента активности</h3>
-      <div id="activityFeed"></div>
-
-      <textarea id="activityEntry" placeholder="Напиши что-нибудь..."></textarea>
-      <button onclick="postActivity()">Отправить</button>
-    </div>
+    <form id="newPost" onsubmit="sendPost(event)">
+      <textarea id="postContent" placeholder="Напиши что-то..."></textarea>
+      <button class="send">Отправить</button>
+    </form>
   </div>
 
   <script>
-    // Имитация данных Telegram
-    const tgUser = Telegram?.WebApp?.initDataUnsafe?.user || {
-      id: 123456789,
-      first_name: "Алина",
-      last_name: "Романова",
-      username: "alina_roma",
-      photo_url: "https://i.pravatar.cc/100?u=alina"
-    };
+    let userName = Telegram.WebApp.initDataUnsafe?.user?.first_name || "Вы";
+    let userId = Telegram.WebApp.initDataUnsafe?.user?.id;
+    let partnerName = "";
+    let coinCount = 0;
+    let currentFeed = "public";
 
-    const userData = {
-      user_id: tgUser.id,
-      name: tgUser.first_name,
-      photo_url: tgUser.photo_url
-    };
+    document.getElementById("userName").innerText = userName;
 
-    window.userData = userData;
-
-    document.getElementById("userName").innerText = userData.name;
-    document.getElementById("avatarPreview").src = userData.photo_url;
-
-    function showScreen(id) {
-      document.getElementById("welcome").style.display = id === "welcome" ? "block" : "none";
-      document.getElementById("mainScreen").style.display = id === "mainScreen" ? "block" : "none";
-    }
-
-    function checkRegistration() {
-      fetch(`data/user_${userData.user_id}.json`)
-        .then(res => {
-          if (res.ok) return res.json();
-          else throw new Error("Not registered");
-        })
+    function loadUserData() {
+      fetch(`load_user.php?user_id=${userId}`)
+        .then(res => res.json())
         .then(data => {
-          document.getElementById("userDisplayName").innerText = userData.name;
-          document.getElementById("userIdDisplay").innerText = "ID: " + userData.user_id;
-          document.getElementById("userAvatar").src = userData.photo_url;
-          showScreen("mainScreen");
-          loadActivity();
-        })
-        .catch(() => {
-          showScreen("welcome");
+          if (data) {
+            partnerName = data.partner;
+            coinCount = data.coins;
+            document.getElementById("partnerName").innerText = partnerName || "не назначен";
+            document.getElementById("coinCount").innerText = coinCount;
+          }
         });
     }
 
-    function registerUser() {
-      fetch("save_user.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData)
-      }).then(() => {
-        checkRegistration();
-      });
-    }
-
-    function postActivity() {
-      const entry = document.getElementById("activityEntry").value.trim();
-      if (!entry) return alert("Пустое сообщение");
-
-      fetch("save_activity.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userData.user_id,
-          name: userData.name,
-          photo: userData.photo_url,
-          entry: entry
-        })
-      }).then(() => {
-        document.getElementById("activityEntry").value = "";
-        loadActivity();
-      });
-    }
-
-    function loadActivity() {
-      fetch("load_activity.php")
+    function loadFeed() {
+      fetch(`load_feed.php?type=${currentFeed}`)
         .then(res => res.json())
         .then(data => {
-          const feed = document.getElementById("activityFeed");
+          const feed = document.getElementById("feed");
           feed.innerHTML = "";
-          data.reverse().forEach(item => {
-            const div = document.createElement("div");
-            div.className = "activity-item";
-            div.innerHTML = `
-              <img src="${item.photo}" />
-              <div><strong>${item.name}</strong><br>${item.entry}</div>
-            `;
-            feed.appendChild(div);
+          data.forEach(entry => {
+            const p = document.createElement("p");
+            p.innerText = `${entry.name}: ${entry.text}`;
+            feed.appendChild(p);
           });
         });
     }
 
-    checkRegistration();
+    function sendPost(event) {
+      event.preventDefault();
+      const content = document.getElementById("postContent").value.trim();
+      if (!content) return;
+
+      fetch('save_post.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: currentFeed,
+          user_id: userId,
+          name: userName,
+          text: content
+        })
+      }).then(() => {
+        document.getElementById("postContent").value = "";
+        loadFeed();
+      });
+    }
+
+    function switchFeed(type) {
+      currentFeed = type;
+      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+      loadFeed();
+    }
+
+    loadUserData();
+    loadFeed();
   </script>
 </body>
 </html>
