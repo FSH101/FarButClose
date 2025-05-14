@@ -1,7 +1,10 @@
 <?php
-$logFile = __DIR__ . "/data/activity_log.json";
-if (!file_exists($logFile)) {
-  echo "[]";
+$filePath = __DIR__ . "/userdata/global_activity.json";
+
+if (!file_exists($filePath)) {
+  echo json_encode([]);
   exit;
 }
-echo file_get_contents($logFile);
+
+$data = file_get_contents($filePath);
+echo $data;
