@@ -1,179 +1,149 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Far But Close</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: "Segoe UI", sans-serif;
       background: linear-gradient(135deg, #fbd3e9, #bb377d);
       color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
       padding: 20px;
     }
-    .screen { display: none; width: 100%; max-width: 500px; }
-    .visible { display: block; }
+    h1, h2 {
+      text-align: center;
+    }
+    input, button, select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
     button {
-      padding: 10px 20px;
-      background: white;
-      color: #bb377d;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
+      background-color: #ffffff30;
+      color: white;
       cursor: pointer;
-      margin-top: 10px;
     }
-    input, textarea {
-      padding: 10px;
-      width: 100%;
-      border-radius: 6px;
-      border: none;
-      margin-top: 10px;
+    .hidden {
+      display: none;
     }
-    header {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      margin-bottom: 20px;
-    }
-    .quest, .game {
-      background: #ffffff30;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 10px;
-    }
-    #chatBox {
-      margin-top: 20px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 8px;
-      padding: 10px;
-    }
-    .message {
-      background: white;
-      color: #bb377d;
-      border-radius: 8px;
-      margin: 5px 0;
-      padding: 8px;
+    .profile {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-  <div id="registerScreen" class="screen">
-    <h2>Добро пожаловать в Far But Close!</h2>
-    <input id="nicknameInput" placeholder="Ваше имя">
-    <input id="partnerInput" placeholder="Имя партнёра">
-    <input id="dateInput" type="date">
-    <button onclick="registerUser()">Начать</button>
-  </div>
+  <div class="container">
 
-  <div id="mainScreen" class="screen">
-    <header>
-      <div><span id="userInfo"></span></div>
-      <div>Монеты: <span id="coinCount">0</span></div>
-    </header>
-    <div id="daysTogether">Вы вместе 0 дней</div>
+    <!-- ЭКРАН РЕГИСТРАЦИИ -->
+    <div id="registerScreen">
+      <h1>Добро пожаловать в Far But Close</h1>
+      <p>Приложение для влюблённых, которые хотят быть ближе несмотря на расстояние.</p>
 
-    <div id="quests">
-      <h3>Квесты</h3>
-      <div class="quest" onclick="completeTask(10)">Напишите друг другу письмо.</div>
-      <div class="quest" onclick="completeTask(15)">Сыграйте в игру вместе.</div>
-      <div class="quest" onclick="completeTask(20)">Виртуальный ужин: ешьте вместе по видеосвязи.</div>
+      <input type="text" id="nameInput" placeholder="Ваш никнейм" />
+      <input type="text" id="partnerInput" placeholder="Никнейм партнёра" />
+      <input type="date" id="dateInput" />
+      <button onclick="registerUser()">Начать</button>
     </div>
 
-    <div id="games">
-      <h3>Мини-игры</h3>
-      <div class="game" onclick="completeTask(5)">Викторина: Кто больше запомнил?</div>
+    <!-- ГЛАВНЫЙ ЭКРАН -->
+    <div id="mainScreen" class="hidden">
+      <h2>Привет, <span id="userNameDisplay"></span>!</h2>
+      <div class="profile">
+        <p>Партнёр: <span id="partnerNameDisplay"></span></p>
+        <p>Вместе с: <span id="startDateDisplay"></span></p>
+        <p>Монет: <span id="coinsDisplay">0</span></p>
+      </div>
     </div>
 
-    <div id="chatBox">
-      <h3>Чат</h3>
-      <div id="chatMessages"></div>
-      <textarea id="chatInput" placeholder="Напишите сообщение..."></textarea>
-      <button onclick="sendMessage()">Отправить</button>
-    </div>
   </div>
 
   <script>
-    const userId = "user123";
-    let userData = {};
+    const tg = window.Telegram.WebApp;
+    const telegramUser = tg.initDataUnsafe?.user;
+    const localUserId = telegramUser?.id || localStorage.getItem("fbcUserId");
 
-    function show(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('visible'));
-      document.getElementById(id).classList.add('visible');
+    async function loadUser() {
+      if (!localUserId) return showRegister();
+
+      const response = await fetch(`data/users/${localUserId}.json`);
+      if (!response.ok) return showRegister();
+
+      const userData = await response.json();
+      showMain(userData);
+    }
+
+    function showRegister() {
+      document.getElementById("registerScreen").classList.remove("hidden");
+      document.getElementById("mainScreen").classList.add("hidden");
+    }
+
+    function showMain(userData) {
+      document.getElementById("registerScreen").classList.add("hidden");
+      document.getElementById("mainScreen").classList.remove("hidden");
+
+      document.getElementById("userNameDisplay").innerText = userData.name;
+      document.getElementById("partnerNameDisplay").innerText = userData.partner;
+      document.getElementById("startDateDisplay").innerText = userData.startDate;
+      document.getElementById("coinsDisplay").innerText = userData.coins || 0;
     }
 
     function registerUser() {
-      const nickname = document.getElementById("nicknameInput").value.trim();
+      const name = document.getElementById("nameInput").value.trim();
       const partner = document.getElementById("partnerInput").value.trim();
       const date = document.getElementById("dateInput").value;
 
-      if (!nickname || !partner || !date) return alert("Заполните все поля.");
+      if (!name || !partner || !date) {
+        alert("Пожалуйста, заполните все поля.");
+        return;
+      }
 
-      userData = { userId, nickname, partner, startDate: date, coins: 0, chat: [] };
+      const userId = telegramUser?.id;
+      if (!userId) {
+        alert("Ошибка авторизации в Telegram.");
+        return;
+      }
 
-      fetch('save_user.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(userData)
-      }).then(() => loadUserData());
-    }
+      const userData = {
+        id: userId,
+        name,
+        partner,
+        startDate: date,
+        coins: 0,
+        feed: [],
+      };
 
-    function loadUserData() {
-      fetch(`load_user.php?userId=${userId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (!data.nickname) return show("registerScreen");
-          userData = data;
-          document.getElementById("userInfo").innerText = `${data.nickname} + ${data.partner}`;
-          document.getElementById("coinCount").innerText = data.coins;
-          const days = Math.floor((new Date() - new Date(data.startDate)) / (1000 * 60 * 60 * 24));
-          document.getElementById("daysTogether").innerText = `Вы вместе ${days} дней`;
-          updateChat();
-          show("mainScreen");
+      fetch("save_user.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      })
+        .then(res => res.text())
+        .then(response => {
+          if (response === "OK") {
+            localStorage.setItem("fbcUserId", userId);
+            showMain(userData);
+          } else {
+            alert("Ошибка при сохранении: " + response);
+          }
+        })
+        .catch(err => {
+          alert("Ошибка сети: " + err.message);
         });
     }
 
-    function completeTask(amount) {
-      userData.coins += amount;
-      document.getElementById("coinCount").innerText = userData.coins;
-      saveUserData();
-    }
-
-    function sendMessage() {
-      const input = document.getElementById("chatInput");
-      const text = input.value.trim();
-      if (!text) return;
-      const message = { text, time: new Date().toISOString() };
-      userData.chat.push(message);
-      input.value = "";
-      updateChat();
-      saveUserData();
-    }
-
-    function updateChat() {
-      const box = document.getElementById("chatMessages");
-      box.innerHTML = "";
-      userData.chat.forEach(m => {
-        const div = document.createElement("div");
-        div.className = "message";
-        div.innerText = `${new Date(m.time).toLocaleTimeString()}: ${m.text}`;
-        box.appendChild(div);
-      });
-    }
-
-    function saveUserData() {
-      fetch('save_user.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(userData)
-      });
-    }
-
-    loadUserData();
+    loadUser();
   </script>
 </body>
 </html>
