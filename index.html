@@ -138,6 +138,43 @@
         container.prepend(div);
       });
     }
+    
+    // Функция для добавления активности в ленту
+async function addActivity() {
+  const activityText = document.getElementById('activityText').value.trim();
+  if (!activityText) {
+    alert('Пожалуйста, напишите что-нибудь!');
+    return;
+  }
+
+  const activityPayload = {
+    user_id: userData.user_id,
+    name: userData.name,
+    text: activityText,
+    time: new Date().toLocaleString(),
+  };
+
+  // Отправляем данные о новой активности на сервер
+  try {
+    const res = await fetch('save_activity.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(activityPayload),
+    });
+
+    const text = await res.text();
+    if (text.trim() === "OK") {
+      // Очистим поле для ввода
+      document.getElementById('activityText').value = '';
+      loadActivity();  // Загружаем обновленную ленту активности
+    } else {
+      alert('Ошибка при сохранении активности: ' + text);
+    }
+  } catch (e) {
+    alert('Ошибка при отправке данных на сервер');
+    console.error(e);
+  }
+}
 
     // Функция для загрузки квестов
     async function loadQuests() {
