@@ -11,6 +11,7 @@
     .hidden { display: none; }
     .avatar { border-radius: 50%; width: 80px; height: 80px; object-fit: cover; margin-bottom: 10px; }
     .entry { background: #fff; border: 1px solid #ddd; margin: 10px auto; padding: 10px; border-radius: 8px; width: 90%; max-width: 400px; text-align: left; }
+    .quest { background: #f0f0f0; padding: 20px; margin-top: 20px; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -37,6 +38,18 @@
     <textarea id="activityText" placeholder="Напиши что-нибудь приятное..."></textarea>
     <button onclick="addActivity()">Добавить в ленту</button>
     <div id="activityFeed"></div>
+
+    <!-- Кнопка для начала квеста -->
+    <button onclick="startQuest()">Начать квест</button>
+
+    <!-- Квест -->
+    <div id="quest" class="hidden quest">
+      <h3>Квест для вас</h3>
+      <p id="questText">Что-то интересное о вашем партнере.</p>
+      <input type="text" id="questAnswer" placeholder="Введите ваш ответ">
+      <button onclick="submitQuestAnswer()">Отправить</button>
+      <div id="questResult"></div>
+    </div>
   </div>
 
   <script>
@@ -142,6 +155,29 @@
         div.innerHTML = `<b>${name}</b> <small>${time}</small><br>${text}`;
         container.prepend(div);
       });
+    }
+
+    // Функция для начала квеста
+    function startQuest() {
+      document.getElementById('quest').classList.remove('hidden');
+      document.getElementById('questResult').innerHTML = '';
+      document.getElementById('questAnswer').value = '';
+    }
+
+    // Функция для отправки ответа на квест
+    function submitQuestAnswer() {
+      const answer = document.getElementById('questAnswer').value.trim();
+      if (!answer) return;
+
+      let resultText = '';
+      // Можно добавить логику оценки ответа
+      if (answer.toLowerCase() === 'любовь') {
+        resultText = 'Отлично! Это правильный ответ!';
+      } else {
+        resultText = 'Попробуйте снова!';
+      }
+
+      document.getElementById('questResult').innerText = resultText;
     }
 
     window.onload = () => {
