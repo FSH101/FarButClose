@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Управление квестами</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #fafafa; padding: 20px; }
+    input, button, textarea { padding: 10px; margin: 10px auto; width: 90%; max-width: 400px; display: block; }
+    .quest { background: #fff; border: 1px solid #ddd; margin: 10px auto; padding: 10px; border-radius: 8px; width: 90%; max-width: 400px; text-align: left; }
+  </style>
+</head>
+<body>
+
+  <h2>Управление квестами</h2>
+
+  <h3>Добавить новый квест</h3>
+  <input type="text" id="questName" placeholder="Название квеста">
+  <textarea id="question" placeholder="Введите вопрос"></textarea>
+  <input type="text" id="answer" placeholder="Правильный ответ">
+  <button onclick="addQuest()">Добавить квест</button>
+
+  <h3>Существующие квесты</h3>
+  <div id="questsList"></div>
+
+  <script>
+    async function addQuest() {
+      const name = document.getElementById('questName').value.trim();
+      const question = document.getElementById('question').value.trim();
+      const answer = document.getElementById('answer').value.trim();
+
+      if (!name || !question || !answer) {
+        alert("Пожалуйста, заполните все поля.");
+        return;
+      }
+
+      const quest = { name, question, answer };
+
+      const res = await fetch('save_quests.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(quest)
+      });
+
+      if (res.ok) {
+        loadQuests();
+      }
+    }
+
+    async function loadQuests() {
+      const res = await fetch('load_quests.php');
+      const data = await res.json();
+      const questsList = document.getElementById('questsList');
+      questsList.innerHTML = '';
+
+      data.forEach(quest => {
+        const div = document.createElement('div');
+        div.className = 'quest';
+        div.innerHTML = `<b>${quest.name}</b><br>Вопрос: ${quest.question}<br>Ответ: ${quest.answer}`;
+        questsList.appendChild(div);
+      });
+    }
+
+    window.onload = loadQuests;
+  </script>
+
+</body>
+</html>
