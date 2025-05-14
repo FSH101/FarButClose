@@ -1,15 +1,21 @@
 <?php
 $data = json_decode(file_get_contents("php://input"), true);
-if (!$data || !isset($data["user_id"]) || !isset($data["entry"])) {
+if (!$data || !isset($data["user_id"], $data["name"], $data["photo"], $data["entry"])) {
   http_response_code(400);
-  exit("Invalid data");
+  exit("Invalid activity data");
 }
 
-$userId = preg_replace('/[^0-9]/', '', $data["user_id"]);
-$filePath = __DIR__ . "/userdata/user_activity_" . $userId . ".json";
+$logFile = __DIR__ . "/data/activity_log.json";
 
-$existing = file_exists($filePath) ? json_decode(file_get_contents($filePath), true) : [];
-$existing[] = $data["entry"];
+$entry = [
+  "user_id" => $data["user_id"],
+  "name" => $data["name"],
+  "photo" => $data["photo"],
+  "entry" => $data["entry"],
+  "time" => time()
+];
 
-file_put_contents($filePath, json_encode($existing, JSON_PRETTY_PRINT));
+$log = file_exists($logFile) ? json_decode(file_get_contents($logFile), true) : [];
+$log[] = $entry;
+file_put_contents($logFile, json_encode($log, JSON_PRETTY_PRINT));
 echo "OK";
