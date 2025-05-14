@@ -21,22 +21,6 @@
     .main {
       padding: 20px;
     }
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .tab-button {
-      padding: 10px 16px;
-      background-color: #ffffff20;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
-    }
-    .tab-button.active {
-      background-color: #ffffff40;
-    }
     #feed {
       background: rgba(255, 255, 255, 0.1);
       padding: 15px;
@@ -83,11 +67,6 @@
   </header>
 
   <div class="main">
-    <div class="tabs">
-      <button class="tab-button active" onclick="switchFeed('public')">Общая лента</button>
-      <button class="tab-button" onclick="switchFeed('private')">Личная лента</button>
-    </div>
-
     <div id="feed"></div>
 
     <form id="newPost" onsubmit="sendPost(event)">
@@ -101,12 +80,12 @@
     let userId = Telegram.WebApp.initDataUnsafe?.user?.id;
     let partnerName = "";
     let coinCount = 0;
-    let currentFeed = "public";
 
     document.getElementById("userName").innerText = userName;
 
+    // Загрузить данные пользователя (если они есть)
     function loadUserData() {
-      fetch(`load_user.php?user_id=${userId}`)
+      fetch(`save_user.php?user_id=${userId}`)
         .then(res => res.json())
         .then(data => {
           if (data) {
@@ -118,8 +97,9 @@
         });
     }
 
+    // Загрузить все посты из ленты
     function loadFeed() {
-      fetch(`load_feed.php?type=${currentFeed}`)
+      fetch('load_feed.php')
         .then(res => res.json())
         .then(data => {
           const feed = document.getElementById("feed");
@@ -132,6 +112,7 @@
         });
     }
 
+    // Отправить пост в ленту
     function sendPost(event) {
       event.preventDefault();
       const content = document.getElementById("postContent").value.trim();
@@ -141,7 +122,6 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: currentFeed,
           user_id: userId,
           name: userName,
           text: content
@@ -152,13 +132,7 @@
       });
     }
 
-    function switchFeed(type) {
-      currentFeed = type;
-      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
-      event.target.classList.add("active");
-      loadFeed();
-    }
-
+    // Инициализация
     loadUserData();
     loadFeed();
   </script>
