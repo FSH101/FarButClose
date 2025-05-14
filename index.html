@@ -1,32 +1,26 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Far But Close</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 0;
-      background: linear-gradient(180deg, #a56eff 0%, #7c3aed 100%);
-      color: #fff;
-    }
-
-    h2, h3, p {
-      margin: 0 0 10px;
-      padding: 0;
+      background: linear-gradient(180deg, #ffd1dc 0%, #ffe4ec 100%);
+      color: #333;
     }
 
     #register, #main {
       padding: 20px;
       max-width: 420px;
       margin: 0 auto 80px;
-      background: #fff;
+      background: #fff0f5;
       border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-      color: #333;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       margin-top: 20px;
     }
 
@@ -41,7 +35,7 @@
     }
 
     button {
-      background: #7c3aed;
+      background: #ff85a2;
       color: white;
       border: none;
       font-weight: bold;
@@ -50,7 +44,7 @@
     }
 
     button:hover {
-      background: #6b21a8;
+      background: #e26d8f;
     }
 
     .hidden {
@@ -64,12 +58,12 @@
       object-fit: cover;
       margin: 20px auto;
       display: block;
-      border: 3px solid #7c3aed;
+      border: 3px solid #ff85a2;
     }
 
     .entry {
-      background: #f9f9f9;
-      border: 1px solid #eee;
+      background: #fff;
+      border: 1px solid #f3c6d1;
       margin: 10px 0;
       padding: 12px;
       border-radius: 12px;
@@ -77,7 +71,7 @@
     }
 
     .quest {
-      background: #ede9fe;
+      background: #ffe6f0;
       color: #333;
       padding: 20px;
       margin-top: 20px;
@@ -85,12 +79,12 @@
     }
 
     #activityFeed .entry {
-      background: #f3f0ff;
-      border-left: 4px solid #7c3aed;
+      background: #fff7fa;
+      border-left: 4px solid #ff85a2;
     }
 
     #questsList .entry {
-      background: #f5f3ff;
+      background: #fff7fb;
     }
 
     #regError {
@@ -98,7 +92,6 @@
       font-size: 14px;
     }
 
-    /* Нижняя навигация */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -123,7 +116,7 @@
     }
 
     .bottom-nav button.active {
-      color: #7c3aed;
+      color: #ff85a2;
       font-weight: bold;
     }
 
@@ -135,8 +128,6 @@
   </style>
 </head>
 <body>
-
-  <!-- Регистрация -->
   <div id="register">
     <h2>Добро пожаловать в Far But Close</h2>
     <p>Игра для влюблённых на расстоянии</p>
@@ -147,21 +138,23 @@
     <div id="regError"></div>
   </div>
 
-  <!-- Главный экран -->
   <div id="main" class="hidden">
     <img id="avatar" class="avatar" src="" alt="avatar" />
     <h2>Привет, <span id="nameDisplay"></span>!</h2>
     <p>Вы вместе с <span id="partnerDisplay"></span> с <span id="dateDisplay"></span></p>
     <button onclick="resetUser()">Сменить пользователя</button>
 
-    <h3>Лента активности</h3>
-    <textarea id="activityText" placeholder="Напиши что-нибудь приятное..."></textarea>
-    <button onclick="addActivity()">Добавить в ленту</button>
-    <div id="activityFeed"></div>
+    <div id="activitySection" class="hidden">
+      <h3>Лента активности</h3>
+      <textarea id="activityText" placeholder="Напиши что-нибудь приятное..."></textarea>
+      <button onclick="addActivity()">Добавить в ленту</button>
+      <div id="activityFeed"></div>
+    </div>
 
-    <h3>Доступные квесты</h3>
-    <div id="questsList"></div>
-    <button onclick="startQuest()">Начать квест</button>
+    <div id="questsSection" class="hidden">
+      <h3>Доступные квесты</h3>
+      <div id="questsList"></div>
+    </div>
 
     <div id="quest" class="hidden quest">
       <h3 id="questTitle"></h3>
@@ -172,25 +165,24 @@
     </div>
   </div>
 
-  <!-- Нижняя навигация -->
   <div class="bottom-nav">
-    <button class="active">
-      <img src="https://img.icons8.com/ios-filled/50/7c3aed/map-marker.png" alt="Места" />
-      Места
+    <button onclick="showSection('activity')">
+      <img src="https://img.icons8.com/ios-filled/50/ff85a2/chat.png" alt="Чат" />
+      Чат
     </button>
-    <button>
-      <img src="https://img.icons8.com/ios-filled/50/7c3aed/activity-feed.png" alt="Лента" />
+    <button onclick="showSection('activity')">
+      <img src="https://img.icons8.com/ios-filled/50/ff85a2/news.png" alt="Лента" />
       Лента
     </button>
-    <button>
-      <img src="https://img.icons8.com/ios-filled/50/7c3aed/infinity.png" alt="Главная" />
+    <button onclick="showSection('quests')" class="active">
+      <img src="https://img.icons8.com/ios-filled/50/ff85a2/infinity.png" alt="Главная" />
     </button>
     <button>
-      <img src="https://img.icons8.com/ios-filled/50/7c3aed/hearts.png" alt="Лайки" />
-      Лайки
+      <img src="https://img.icons8.com/ios-filled/50/ff85a2/hearts.png" alt="Партнёр" />
+      Партнёр
     </button>
     <button>
-      <img src="https://img.icons8.com/ios-filled/50/7c3aed/user.png" alt="Профиль" />
+      <img src="https://img.icons8.com/ios-filled/50/ff85a2/user.png" alt="Профиль" />
       Профиль
     </button>
   </div>
@@ -219,7 +211,6 @@
     async function registerUser() {
       const partner = document.getElementById('partner').value.trim();
       const startDate = document.getElementById('startDate').value;
-
       if (!partner || !startDate) {
         document.getElementById('regError').innerText = "Пожалуйста, заполните все поля.";
         return;
@@ -250,7 +241,6 @@
         }
       } catch (e) {
         document.getElementById('regError').innerText = "Ошибка подключения к серверу";
-        console.error(e);
       }
     }
 
@@ -261,6 +251,20 @@
       document.getElementById('partnerDisplay').innerText = data.partner;
       document.getElementById('dateDisplay').innerText = data.date;
       if (userData.photo) document.getElementById('avatar').src = userData.photo;
+    }
+
+    function showSection(section) {
+      document.getElementById('activitySection').classList.add('hidden');
+      document.getElementById('questsSection').classList.add('hidden');
+      document.getElementById('quest').classList.add('hidden');
+
+      if (section === 'activity') {
+        document.getElementById('activitySection').classList.remove('hidden');
+        loadActivity();
+      } else if (section === 'quests') {
+        document.getElementById('questsSection').classList.remove('hidden');
+        loadQuests();
+      }
     }
 
     async function loadActivity() {
@@ -311,7 +315,6 @@
         }
       } catch (e) {
         alert('Ошибка при отправке данных на сервер');
-        console.error(e);
       }
     }
 
@@ -363,13 +366,16 @@
       document.getElementById('questResult').innerText = resultText;
     }
 
+    function resetUser() {
+      localStorage.removeItem('user_data');
+      window.location.reload();
+    }
+
     window.onload = () => {
       const saved = localStorage.getItem('user_data');
       if (saved) {
         const data = JSON.parse(saved);
         showMainScreen(data);
-        loadActivity();
-        loadQuests();
       }
     };
   </script>
