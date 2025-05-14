@@ -44,8 +44,8 @@
 
     <!-- Квест -->
     <div id="quest" class="hidden quest">
-      <h3>Квест для вас</h3>
-      <p id="questText">Что-то интересное о вашем партнере.</p>
+      <h3 id="questTitle"></h3>
+      <p id="questDescription"></p>
       <input type="text" id="questAnswer" placeholder="Введите ваш ответ">
       <button onclick="submitQuestAnswer()">Отправить</button>
       <div id="questResult"></div>
@@ -53,14 +53,12 @@
   </div>
 
   <script>
-    function resetUser() {
-      localStorage.clear();
-      location.reload();
-    }
-
     let tg = window.Telegram.WebApp;
     let userData = null;
+    let quests = [];  // Массив для хранения квестов
+    let currentQuest = null;  // Текущий квест
 
+    // Инициализация данных пользователя
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
       const user = tg.initDataUnsafe.user;
       const userId = user.id;
@@ -104,6 +102,7 @@
           localStorage.setItem('user_data', JSON.stringify(payload));
           showMainScreen(payload);
           loadActivity();
+          loadQuests();  // Загружаем квесты
         } else {
           document.getElementById('regError').innerText = "Ошибка при сохранении: " + text;
         }
@@ -122,25 +121,6 @@
       if (userData.photo) document.getElementById('avatar').src = userData.photo;
     }
 
-    async function addActivity() {
-      const text = document.getElementById('activityText').value.trim();
-      if (!text) return;
-      const entry = { text, time: new Date().toLocaleString() };
-
-      await fetch('save_activity.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userData.user_id,
-          name: userData.name,
-          entry: entry
-        })
-      });
-
-      document.getElementById('activityText').value = '';
-      loadActivity();
-    }
-
     async function loadActivity() {
       const res = await fetch('load_activity.php');
       const data = await res.json();
@@ -157,10 +137,33 @@
       });
     }
 
+    // Функция для загрузки квестов
+    async function loadQuests() {
+      try {
+        const res = await fetch('quests.json');
+        quests = await res.json();
+      } catch (e) {
+        console.error('Ошибка при загрузке квестов:', e);
+      }
+    }
+
     // Функция для начала квеста
     function startQuest() {
+      if (quests.length === 0) {
+        document.getElementById('quest').classList.remove('hidden');
+        document.getElementById('questTitle').innerText = "Нет доступных квестов";
+        document.getElementById('questDescription').innerText = "Попробуйте позже.";
+        return;
+      }
+
+      // Выбираем случайный квест из массива
+      const randomQuest = quests[Math.floor(Math.random() * quests.length)];
+      currentQuest = randomQuest;
+
       document.getElementById('quest').classList.remove('hidden');
-      document.getElementById('questResult').innerHTML = '';
+      document.getElementById('questTitle').innerText = randomQuest.title;
+      document.getElementById('questDescription').innerText = randomQuest.description;
+      document.getElementById('questResult').innerText = '';
       document.getElementById('questAnswer').value = '';
     }
 
@@ -170,8 +173,8 @@
       if (!answer) return;
 
       let resultText = '';
-      // Можно добавить логику оценки ответа
-      if (answer.toLowerCase() === 'любовь') {
+      // Логика проверки ответа
+      if (answer.toLowerCase() === currentQuest.answer.toLowerCase()) {
         resultText = 'Отлично! Это правильный ответ!';
       } else {
         resultText = 'Попробуйте снова!';
@@ -186,6 +189,7 @@
         const data = JSON.parse(saved);
         showMainScreen(data);
         loadActivity();
+        loadQuests();  // Загружаем квесты
       }
     };
   </script>
