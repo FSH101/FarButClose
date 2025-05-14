@@ -23,10 +23,17 @@ $filePath = $dir . "/user_activity.json"; // Все записи сохраня�
 // Загружаем существующие записи
 $existing = file_exists($filePath) ? json_decode(file_get_contents($filePath), true) : [];
 
+// Получаем имя пользователя
+$name = isset($data['name']) ? $data['name'] : 'Пользователь';
+
+// Получаем URL фотографии пользователя
+$photo = isset($data['photo']) ? $data['photo'] : '';
+
 // Добавляем новую запись
 $existing[] = [
   'user_id' => $userId,
-  'name' => $data['name'],
+  'name' => $name,
+  'photo' => $photo,
   'entry' => $data['entry'],
   'time' => date("Y-m-d H:i:s") // Добавляем время записи
 ];
