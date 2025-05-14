@@ -31,6 +31,7 @@
     <img id="avatar" class="avatar" src="" alt="avatar" />
     <h2>Привет, <span id="nameDisplay"></span>!</h2>
     <p>Вы вместе с <span id="partnerDisplay"></span> с <span id="dateDisplay"></span></p>
+    <button onclick="resetUser()">Сменить пользователя</button>
 
     <h3>Лента активности</h3>
     <textarea id="activityText" placeholder="Напиши что-нибудь приятное..."></textarea>
@@ -39,6 +40,10 @@
   </div>
 
   <script>
+  function resetUser() {
+  localStorage.clear();
+  location.reload();
+}
     let tg = window.Telegram.WebApp;
     let userData = null;
 
