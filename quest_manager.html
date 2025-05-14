@@ -2,67 +2,104 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Управление квестами</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Редактор Квестов</title>
   <style>
-    body { font-family: sans-serif; text-align: center; background: #fafafa; padding: 20px; }
+    body { font-family: sans-serif; text-align: center; background: #f4f4f4; padding: 20px; }
+    .hidden { display: none; }
     input, button, textarea { padding: 10px; margin: 10px auto; width: 90%; max-width: 400px; display: block; }
     .quest { background: #fff; border: 1px solid #ddd; margin: 10px auto; padding: 10px; border-radius: 8px; width: 90%; max-width: 400px; text-align: left; }
   </style>
 </head>
 <body>
+  <h2>Редактор Квестов</h2>
+  <div>
+    <h3>Добавить новый квест</h3>
+    <input type="text" id="newQuestTitle" placeholder="Название квеста">
+    <textarea id="newQuestDescription" placeholder="Описание квеста"></textarea>
+    <input type="text" id="newQuestAnswer" placeholder="Ответ на квест">
+    <button onclick="addQuest()">Добавить квест</button>
+  </div>
 
-  <h2>Управление квестами</h2>
-
-  <h3>Добавить новый квест</h3>
-  <input type="text" id="questName" placeholder="Название квеста">
-  <textarea id="question" placeholder="Введите вопрос"></textarea>
-  <input type="text" id="answer" placeholder="Правильный ответ">
-  <button onclick="addQuest()">Добавить квест</button>
-
-  <h3>Существующие квесты</h3>
+  <h3>Список Квестов</h3>
   <div id="questsList"></div>
 
   <script>
-    async function addQuest() {
-      const name = document.getElementById('questName').value.trim();
-      const question = document.getElementById('question').value.trim();
-      const answer = document.getElementById('answer').value.trim();
+    let quests = [];
 
-      if (!name || !question || !answer) {
-        alert("Пожалуйста, заполните все поля.");
+    // Загрузка квестов при загрузке страницы
+    window.onload = async () => {
+      const res = await fetch('quests.json');
+      quests = await res.json();
+      renderQuestList();
+    };
+
+    // Рендеринг списка квестов
+    function renderQuestList() {
+      const listContainer = document.getElementById('questsList');
+      listContainer.innerHTML = '';  // Очищаем контейнер
+      quests.forEach((quest, index) => {
+        const questDiv = document.createElement('div');
+        questDiv.className = 'quest';
+        questDiv.innerHTML = `
+          <h4>${quest.title}</h4>
+          <p>${quest.description}</p>
+          <p><strong>Правильный ответ:</strong> ${quest.answer}</p>
+          <button onclick="editQuest(${index})">Редактировать</button>
+          <button onclick="deleteQuest(${index})">Удалить</button>
+        `;
+        listContainer.appendChild(questDiv);
+      });
+    }
+
+    // Добавление нового квеста
+    async function addQuest() {
+      const title = document.getElementById('newQuestTitle').value;
+      const description = document.getElementById('newQuestDescription').value;
+      const answer = document.getElementById('newQuestAnswer').value;
+
+      if (!title || !description || !answer) {
+        alert('Пожалуйста, заполните все поля!');
         return;
       }
 
-      const quest = { name, question, answer };
+      const newQuest = { title, description, answer };
+      quests.push(newQuest);
+      await saveQuests();
+      renderQuestList();
+    }
 
-      const res = await fetch('save_quests.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(quest)
-      });
+    // Редактирование существующего квеста
+    function editQuest(index) {
+      const quest = quests[index];
+      const newTitle = prompt('Редактировать название квеста', quest.title);
+      const newDescription = prompt('Редактировать описание квеста', quest.description);
+      const newAnswer = prompt('Редактировать ответ', quest.answer);
 
-      if (res.ok) {
-        loadQuests();
+      if (newTitle && newDescription && newAnswer) {
+        quests[index] = { title: newTitle, description: newDescription, answer: newAnswer };
+        saveQuests();
+        renderQuestList();
       }
     }
 
-    async function loadQuests() {
-      const res = await fetch('load_quests.php');
-      const data = await res.json();
-      const questsList = document.getElementById('questsList');
-      questsList.innerHTML = '';
-
-      data.forEach(quest => {
-        const div = document.createElement('div');
-        div.className = 'quest';
-        div.innerHTML = `<b>${quest.name}</b><br>Вопрос: ${quest.question}<br>Ответ: ${quest.answer}`;
-        questsList.appendChild(div);
-      });
+    // Удаление квеста
+    async function deleteQuest(index) {
+      if (confirm('Вы уверены, что хотите удалить этот квест?')) {
+        quests.splice(index, 1);
+        await saveQuests();
+        renderQuestList();
+      }
     }
 
-    window.onload = loadQuests;
+    // Сохранение списка квестов на сервере
+    async function saveQuests() {
+      await fetch('save_quests.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(quests),
+      });
+    }
   </script>
-
 </body>
 </html>
