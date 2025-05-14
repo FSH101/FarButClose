@@ -5,137 +5,90 @@
   <title>Far But Close</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #fbd3e9, #bb377d); color: white; }
-    .screen { display: none; padding: 20px; }
-    .visible { display: block; }
-    input, button, textarea { font-size: 16px; padding: 10px; border-radius: 8px; border: none; margin-top: 10px; width: 100%; }
-    header { padding: 15px; background: rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
-    .tabs { margin-top: 20px; display: flex; gap: 10px; }
-    .tab { background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; cursor: pointer; }
-    .tab.active { background: rgba(255,255,255,0.4); }
-    #feed p { background: rgba(255,255,255,0.2); padding: 8px; border-radius: 6px; margin: 5px 0; }
+    body { font-family: sans-serif; text-align: center; background: #fafafa; padding: 20px; }
+    input, button { padding: 10px; margin: 10px; width: 80%; max-width: 300px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
-<div id="registration" class="screen visible">
-  <h2>Добро пожаловать в Far But Close</h2>
-  <p>Приложение для влюблённых, находящихся на расстоянии</p>
-  <input type="text" id="tg_name" placeholder="Ваше имя из Telegram">
-  <input type="text" id="partner" placeholder="Имя партнёра">
-  <input type="date" id="start_date">
-  <button onclick="registerUser()">Начать</button>
-</div>
-
-<div id="main" class="screen">
-  <header>
-    <div id="userInfo"></div>
-    <div>Монеты: <span id="coins">0</span></div>
-  </header>
-
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('feed')">Лента</div>
-    <div class="tab" onclick="switchTab('quests')">Квесты</div>
-    <div class="tab" onclick="switchTab('chat')">Чат</div>
+  <div id="register">
+    <h2>Добро пожаловать в Far But Close</h2>
+    <p>Игра для влюбленных на расстоянии</p>
+    <input type="text" id="tgName" placeholder="Ваше имя">
+    <input type="text" id="partner" placeholder="Имя партнёра">
+    <input type="date" id="startDate">
+    <button onclick="registerUser()">Начать</button>
+    <div id="regError" style="color: red;"></div>
   </div>
 
-  <div id="feed" class="tab-content visible">
-    <h3>Лента</h3>
-    <div id="posts"></div>
-    <textarea id="newPost" placeholder="Напиши что-то..."></textarea>
-    <button onclick="addPost()">Отправить</button>
+  <div id="main" class="hidden">
+    <h2>Привет, <span id="nameDisplay"></span>!</h2>
+    <p>Вы вместе с <span id="partnerDisplay"></span> с <span id="dateDisplay"></span></p>
   </div>
 
-  <div id="quests" class="tab-content">
-    <h3>Квесты</h3>
-    <ul id="questList">
-      <li><button onclick="completeQuest(1)">Сделай комплимент</button></li>
-      <li><button onclick="completeQuest(2)">Поделись воспоминанием</button></li>
-    </ul>
-  </div>
+  <script>
+    let userId = localStorage.getItem('fake_user_id') || Math.floor(Math.random() * 1000000000);
+    localStorage.setItem('fake_user_id', userId);
 
-  <div id="chat" class="tab-content">
-    <h3>Чат</h3>
-    <div id="chatBox" style="max-height:200px; overflow:auto;"></div>
-    <input id="chatInput" placeholder="Сообщение...">
-    <button onclick="sendMessage()">Отправить</button>
-  </div>
-</div>
+    async function registerUser() {
+      const tgName = document.getElementById('tgName').value.trim();
+      const partner = document.getElementById('partner').value.trim();
+      const startDate = document.getElementById('startDate').value;
 
-<script>
-let userId = Telegram?.WebApp?.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000000);
-let tgName = '';
-let partner = '';
-let startDate = '';
-let coins = 0;
+      if (!tgName || !partner || !startDate) {
+        document.getElementById('regError').innerText = "Пожалуйста, заполните все поля.";
+        return;
+      }
 
-function switchTab(tabId) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('visible'));
-  document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
-  document.getElementById(tabId).classList.add('visible');
-}
+      const userData = {
+        user_id: userId,
+        name: tgName,
+        partner: partner,
+        date: startDate
+      };
 
-function registerUser() {
-  tgName = document.getElementById('tg_name').value;
-  partner = document.getElementById('partner').value;
-  startDate = document.getElementById('start_date').value;
+      console.log("Отправка данных:", userData); // Отладка
 
-  if (!tgName || !partner || !startDate) {
-    alert("Заполните все поля");
-    return;
-  }
+      try {
+        const res = await fetch('save_user.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData)
+        });
 
-  fetch('save_user.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: userId, partner, date: startDate, name: tgName })
-  }).then(() => {
-    showMainScreen();
-  });
-}
+        const text = await res.text();
+        console.log("Ответ сервера:", text);
 
-function showMainScreen() {
-  document.getElementById('registration').classList.remove('visible');
-  document.getElementById('main').classList.add('visible');
-  document.getElementById('userInfo').innerText = `Вы: ${tgName} | Партнёр: ${partner}`;
-}
-
-function addPost() {
-  const text = document.getElementById('newPost').value.trim();
-  if (!text) return;
-  const post = document.createElement('p');
-  post.innerText = `${tgName}: ${text}`;
-  document.getElementById('posts').appendChild(post);
-  document.getElementById('newPost').value = '';
-}
-
-function completeQuest(id) {
-  coins += 10;
-  document.getElementById('coins').innerText = coins;
-  alert("Квест выполнен! +10 монет");
-}
-
-function sendMessage() {
-  const msg = document.getElementById('chatInput').value.trim();
-  if (!msg) return;
-  const p = document.createElement('p');
-  p.innerText = `${tgName}: ${msg}`;
-  document.getElementById('chatBox').appendChild(p);
-  document.getElementById('chatInput').value = '';
-}
-
-// Проверка при запуске
-fetch(`load_user.php?id=${userId}`)
-  .then(res => res.json())
-  .then(data => {
-    if (data.partner && data.date) {
-      tgName = data.name || "Вы";
-      partner = data.partner;
-      startDate = data.date;
-      showMainScreen();
+        if (text.trim() === "OK") {
+          localStorage.setItem('user_data', JSON.stringify(userData));
+          showMainScreen(userData);
+        } else {
+          document.getElementById('regError').innerText = "Ошибка при сохранении: " + text;
+        }
+      } catch (e) {
+        document.getElementById('regError').innerText = "Ошибка подключения к серверу";
+        console.error(e);
+      }
     }
-  });
-</script>
+
+    function showMainScreen(data) {
+      document.getElementById('register').classList.add('hidden');
+      document.getElementById('main').classList.remove('hidden');
+      document.getElementById('nameDisplay').innerText = data.name;
+      document.getElementById('partnerDisplay').innerText = data.partner;
+      document.getElementById('dateDisplay').innerText = data.date;
+    }
+
+    // При повторном входе — загружаем из localStorage
+    window.onload = () => {
+      const saved = localStorage.getItem('user_data');
+      if (saved) {
+        const data = JSON.parse(saved);
+        showMainScreen(data);
+      }
+    };
+  </script>
+
 </body>
 </html>
