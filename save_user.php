@@ -1,7 +1,7 @@
 <?php
 $data = json_decode(file_get_contents("php://input"), true);
 
-// Отладка — вывести полученные данные
+// Сохраняем входящие данные в лог
 file_put_contents(__DIR__ . "/debug.log", print_r($data, true));
 
 if (!$data || !isset($data["user_id"])) {
@@ -10,7 +10,15 @@ if (!$data || !isset($data["user_id"])) {
 }
 
 $userId = preg_replace('/[^0-9]/', '', $data["user_id"]);
-$filePath = __DIR__ . "/userdata/user_" . $userId . ".json";
+if (!$userId) {
+  http_response_code(400);
+  exit("Invalid user ID");
+}
+
+$dir = __DIR__ . "/userdata";
+if (!is_dir($dir)) mkdir($dir, 0777, true);
+
+$filePath = $dir . "/user_" . $userId . ".json";
 
 file_put_contents($filePath, json_encode([
   "name" => $data["name"] ?? '',
