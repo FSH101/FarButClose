@@ -57,10 +57,9 @@
   <script>
     let tg = window.Telegram.WebApp;
     let userData = null;
-    let quests = [];  // Массив для хранения квестов
-    let currentQuest = null;  // Текущий квест
+    let quests = [];
+    let currentQuest = null;
 
-    // Инициализация данных пользователя
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
       const user = tg.initDataUnsafe.user;
       const userId = user.id;
@@ -104,7 +103,7 @@
           localStorage.setItem('user_data', JSON.stringify(payload));
           showMainScreen(payload);
           loadActivity();
-          loadQuests();  // Загружаем квесты
+          loadQuests();
         } else {
           document.getElementById('regError').innerText = "Ошибка при сохранении: " + text;
         }
@@ -138,67 +137,44 @@
         container.prepend(div);
       });
     }
-    
-    // Функция для добавления активности в ленту
-async function addActivity() {
-  const activityText = document.getElementById('activityText').value.trim();
-  if (!activityText) {
-    alert('Пожалуйста, напишите что-нибудь!');
-    return;
-  }
 
-  const activityPayload = {
-    user_id: userData.user_id,
-    name: userData.name,
-    entry: {
-      text: activityText,
-      time: new Date().toLocaleString()
+    // === ИСПРАВЛЕННАЯ ФУНКЦИЯ ===
+    async function addActivity() {
+      const activityText = document.getElementById('activityText').value.trim();
+      if (!activityText) {
+        alert('Пожалуйста, напишите что-нибудь!');
+        return;
+      }
+
+      const activityPayload = {
+        user_id: userData.user_id,
+        name: userData.name,
+        entry: {
+          text: activityText,
+          time: new Date().toLocaleString()
+        }
+      };
+
+      try {
+        const res = await fetch('save_activity.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(activityPayload)
+        });
+
+        const text = await res.text();
+        if (text.trim() === "OK") {
+          document.getElementById('activityText').value = '';
+          loadActivity();
+        } else {
+          alert('Ошибка при сохранении активности: ' + text);
+        }
+      } catch (e) {
+        alert('Ошибка при отправке данных на сервер');
+        console.error(e);
+      }
     }
-  };
 
-  try {
-    const res = await fetch('save_activity.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(activityPayload)
-    });
-
-    const text = await res.text();
-    if (text.trim() === "OK") {
-      document.getElementById('activityText').value = '';
-      loadActivity();
-    } else {
-      alert('Ошибка при сохранении активности: ' + text);
-    }
-  } catch (e) {
-    alert('Ошибка при отправке данных на сервер');
-    console.error(e);
-  }
-}
-
-  // Отправляем данные о новой активности на сервер
-  try {
-    const res = await fetch('save_activity.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(activityPayload),
-    });
-
-    const text = await res.text();
-    if (text.trim() === "OK") {
-      // Очистим поле для ввода
-      document.getElementById('activityText').value = '';
-      loadActivity();  // Загружаем обновленную ленту активности
-    } else {
-      alert('Ошибка при сохранении активности: ' + text);
-    }
-  } catch (e) {
-    alert('Ошибка при отправке данных на сервер');
-    console.error(e);
-  }
-}
-
-    // Функция для загрузки квестов
     async function loadQuests() {
       try {
         const res = await fetch('quests.json');
@@ -209,7 +185,6 @@ async function addActivity() {
       }
     }
 
-    // Отображаем список квестов
     function displayQuestList() {
       const questsList = document.getElementById('questsList');
       questsList.innerHTML = '';
@@ -225,7 +200,6 @@ async function addActivity() {
       });
     }
 
-    // Функция для начала конкретного квеста
     function startSpecificQuest(quest) {
       currentQuest = quest;
       document.getElementById('quest').classList.remove('hidden');
@@ -235,13 +209,11 @@ async function addActivity() {
       document.getElementById('questAnswer').value = '';
     }
 
-    // Функция для отправки ответа на квест
     function submitQuestAnswer() {
       const answer = document.getElementById('questAnswer').value.trim();
       if (!answer) return;
 
       let resultText = '';
-      // Логика проверки ответа
       if (answer.toLowerCase() === currentQuest.answer.toLowerCase()) {
         resultText = 'Отлично! Это правильный ответ!';
       } else {
@@ -257,10 +229,9 @@ async function addActivity() {
         const data = JSON.parse(saved);
         showMainScreen(data);
         loadActivity();
-        loadQuests();  // Загружаем квесты
+        loadQuests();
       }
     };
   </script>
-
 </body>
 </html>
