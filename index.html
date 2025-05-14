@@ -2,139 +2,148 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Far But Close</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #fbd3e9, #bb377d);
-      color: white;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 30px;
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-    .main {
-      padding: 20px;
-    }
-    #feed {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 15px;
-      border-radius: 10px;
-      max-height: 300px;
-      overflow-y: auto;
-      margin-bottom: 10px;
-    }
-    #feed p {
-      background: rgba(255, 255, 255, 0.2);
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-    }
-    #newPost {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    textarea {
-      width: 100%;
-      height: 60px;
-      padding: 10px;
-      font-family: inherit;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-    }
-    button.send {
-      background-color: #ffffff30;
-      border: none;
-      padding: 10px;
-      border-radius: 6px;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
+    body { font-family: sans-serif; text-align: center; background: #fafafa; padding: 20px; }
+    input, button, textarea { padding: 10px; margin: 10px auto; width: 90%; max-width: 400px; display: block; }
+    .hidden { display: none; }
+    .avatar { border-radius: 50%; width: 80px; height: 80px; object-fit: cover; margin-bottom: 10px; }
+    .entry { background: #fff; border: 1px solid #ddd; margin: 10px auto; padding: 10px; border-radius: 8px; width: 90%; max-width: 400px; text-align: left; }
   </style>
 </head>
 <body>
-  <header>
-    <div>Вы: <span id="userName">...</span> | Партнёр: <span id="partnerName">не назначен</span></div>
-    <div>Монеты: <span id="coinCount">0</span></div>
-  </header>
 
-  <div class="main">
-    <div id="feed"></div>
+  <!-- Регистрация -->
+  <div id="register">
+    <h2>Добро пожаловать в Far But Close</h2>
+    <p>Игра для влюблённых на расстоянии</p>
+    <p id="welcomeName"></p>
+    <input type="text" id="partner" placeholder="Имя партнёра">
+    <input type="date" id="startDate">
+    <button onclick="registerUser()">Начать</button>
+    <div id="regError" style="color: red;"></div>
+  </div>
 
-    <form id="newPost" onsubmit="sendPost(event)">
-      <textarea id="postContent" placeholder="Напиши что-то..."></textarea>
-      <button class="send">Отправить</button>
-    </form>
+  <!-- Главный экран -->
+  <div id="main" class="hidden">
+    <img id="avatar" class="avatar" src="" alt="avatar" />
+    <h2>Привет, <span id="nameDisplay"></span>!</h2>
+    <p>Вы вместе с <span id="partnerDisplay"></span> с <span id="dateDisplay"></span></p>
+
+    <h3>Лента активности</h3>
+    <textarea id="activityText" placeholder="Напиши что-нибудь приятное..."></textarea>
+    <button onclick="addActivity()">Добавить в ленту</button>
+    <div id="activityFeed"></div>
   </div>
 
   <script>
-    let userName = Telegram.WebApp.initDataUnsafe?.user?.first_name || "Вы";
-    let userId = Telegram.WebApp.initDataUnsafe?.user?.id;
-    let partnerName = "";
-    let coinCount = 0;
+    let tg = window.Telegram.WebApp;
+    let userData = null;
 
-    document.getElementById("userName").innerText = userName;
-
-    // Загрузить данные пользователя (если они есть)
-    function loadUserData() {
-      fetch(`save_user.php?user_id=${userId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data) {
-            partnerName = data.partner;
-            coinCount = data.coins;
-            document.getElementById("partnerName").innerText = partnerName || "не назначен";
-            document.getElementById("coinCount").innerText = coinCount;
-          }
-        });
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      const user = tg.initDataUnsafe.user;
+      const userId = user.id;
+      const fullName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+      const photoUrl = user.photo_url || '';
+      userData = { user_id: userId, name: fullName, photo: photoUrl };
+      document.getElementById('welcomeName').innerText = `Привет, ${fullName}`;
+      if (photoUrl) document.getElementById('avatar').src = photoUrl;
+    } else {
+      const fallbackId = localStorage.getItem('fake_user_id') || Math.floor(Math.random() * 1000000000);
+      localStorage.setItem('fake_user_id', fallbackId);
+      userData = { user_id: fallbackId, name: 'Пользователь', photo: '' };
+      document.getElementById('welcomeName').innerText = `Привет!`;
     }
 
-    // Загрузить все посты из ленты
-    function loadFeed() {
-      fetch('load_feed.php')
-        .then(res => res.json())
-        .then(data => {
-          const feed = document.getElementById("feed");
-          feed.innerHTML = "";
-          data.forEach(entry => {
-            const p = document.createElement("p");
-            p.innerText = `${entry.name}: ${entry.text}`;
-            feed.appendChild(p);
-          });
+    async function registerUser() {
+      const partner = document.getElementById('partner').value.trim();
+      const startDate = document.getElementById('startDate').value;
+
+      if (!partner || !startDate) {
+        document.getElementById('regError').innerText = "Пожалуйста, заполните все поля.";
+        return;
+      }
+
+      const payload = {
+        user_id: userData.user_id,
+        name: userData.name,
+        partner: partner,
+        date: startDate
+      };
+
+      try {
+        const res = await fetch('save_user.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
+
+        const text = await res.text();
+        if (text.trim() === "OK") {
+          localStorage.setItem('user_data', JSON.stringify(payload));
+          showMainScreen(payload);
+          loadActivity();
+        } else {
+          document.getElementById('regError').innerText = "Ошибка при сохранении: " + text;
+        }
+      } catch (e) {
+        document.getElementById('regError').innerText = "Ошибка подключения к серверу";
+        console.error(e);
+      }
     }
 
-    // Отправить пост в ленту
-    function sendPost(event) {
-      event.preventDefault();
-      const content = document.getElementById("postContent").value.trim();
-      if (!content) return;
+    function showMainScreen(data) {
+      document.getElementById('register').classList.add('hidden');
+      document.getElementById('main').classList.remove('hidden');
+      document.getElementById('nameDisplay').innerText = data.name;
+      document.getElementById('partnerDisplay').innerText = data.partner;
+      document.getElementById('dateDisplay').innerText = data.date;
+      if (userData.photo) document.getElementById('avatar').src = userData.photo;
+    }
 
-      fetch('save_post.php', {
+    async function addActivity() {
+      const text = document.getElementById('activityText').value.trim();
+      if (!text) return;
+      const entry = { text, time: new Date().toLocaleString() };
+
+      await fetch('save_activity.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: userId,
-          name: userName,
-          text: content
+          user_id: userData.user_id,
+          entry: entry
         })
-      }).then(() => {
-        document.getElementById("postContent").value = "";
-        loadFeed();
+      });
+
+      document.getElementById('activityText').value = '';
+      loadActivity();
+    }
+
+    async function loadActivity() {
+      const res = await fetch('load_activity.php');
+      const data = await res.json();
+      const container = document.getElementById('activityFeed');
+      container.innerHTML = '';
+      data.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.innerHTML = `<b>${item.time}</b><br>${item.text}`;
+        container.prepend(div);
       });
     }
 
-    // Инициализация
-    loadUserData();
-    loadFeed();
+    // Автозагрузка при входе
+    window.onload = () => {
+      const saved = localStorage.getItem('user_data');
+      if (saved) {
+        const data = JSON.parse(saved);
+        showMainScreen(data);
+        loadActivity();
+      }
+    };
   </script>
+
 </body>
 </html>
