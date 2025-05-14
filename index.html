@@ -59,6 +59,7 @@
     </div>
     <div>
       <input type="text" id="partnerName" class="input-field" placeholder="Введите имя партнёра">
+      <button class="btn" onclick="selectPartner()">Выбрать партнёра через Telegram</button>
       <button class="btn" onclick="finishRegistration()">Завершить регистрацию</button>
     </div>
   </div>
@@ -98,6 +99,11 @@
           document.getElementById("mainContainer").style.display = "none";
         }
       });
+
+    // Функция для выбора партнёра через Telegram
+    function selectPartner() {
+      Telegram.WebApp.openLink('https://t.me/your_telegram_bot'); // Ссылка на бота для выбора партнера
+    }
 
     // Функция для завершения регистрации
     function finishRegistration() {
