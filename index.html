@@ -1,149 +1,199 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Far But Close</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { font-family: sans-serif; text-align: center; background: #fafafa; padding: 20px; }
-    input, button, textarea { padding: 10px; margin: 10px auto; width: 90%; max-width: 400px; display: block; }
-    .hidden { display: none; }
-    .avatar { border-radius: 50%; width: 80px; height: 80px; object-fit: cover; margin-bottom: 10px; }
-    .entry { background: #fff; border: 1px solid #ddd; margin: 10px auto; padding: 10px; border-radius: 8px; width: 90%; max-width: 400px; text-align: left; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #fbd3e9, #bb377d);
+      color: #fff;
+      padding: 20px;
+    }
+    #app {
+      max-width: 500px;
+      margin: auto;
+    }
+    #welcome, #mainScreen {
+      display: none;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .user-info img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #fff;
+    }
+    textarea {
+      width: 100%;
+      height: 60px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      resize: none;
+      margin-top: 10px;
+    }
+    button {
+      background-color: #ffffff30;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    #activityFeed {
+      margin-top: 20px;
+    }
+    .activity-item {
+      background: rgba(255,255,255,0.15);
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .activity-item img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #fff;
+    }
   </style>
 </head>
 <body>
+  <div id="app">
+    <div id="welcome">
+      <h2>Добро пожаловать в Far But Close</h2>
+      <p>Это приложение для пар, которые далеко друг от друга.</p>
+      <div class="user-info">
+        <img id="avatarPreview" src="" alt="avatar" />
+        <span id="userName"></span>
+      </div>
+      <button onclick="registerUser()">Начать</button>
+    </div>
 
-  <!-- Регистрация -->
-  <div id="register">
-    <h2>Добро пожаловать в Far But Close</h2>
-    <p>Игра для влюблённых на расстоянии</p>
-    <p id="welcomeName"></p>
-    <input type="text" id="partner" placeholder="Имя партнёра">
-    <input type="date" id="startDate">
-    <button onclick="registerUser()">Начать</button>
-    <div id="regError" style="color: red;"></div>
-  </div>
+    <div id="mainScreen">
+      <div class="user-info">
+        <img id="userAvatar" src="" />
+        <div>
+          <strong id="userDisplayName"></strong><br>
+          <span id="userIdDisplay"></span>
+        </div>
+      </div>
 
-  <!-- Главный экран -->
-  <div id="main" class="hidden">
-    <img id="avatar" class="avatar" src="" alt="avatar" />
-    <h2>Привет, <span id="nameDisplay"></span>!</h2>
-    <p>Вы вместе с <span id="partnerDisplay"></span> с <span id="dateDisplay"></span></p>
+      <h3>Лента активности</h3>
+      <div id="activityFeed"></div>
 
-    <h3>Лента активности</h3>
-    <textarea id="activityText" placeholder="Напиши что-нибудь приятное..."></textarea>
-    <button onclick="addActivity()">Добавить в ленту</button>
-    <div id="activityFeed"></div>
+      <textarea id="activityEntry" placeholder="Напиши что-нибудь..."></textarea>
+      <button onclick="postActivity()">Отправить</button>
+    </div>
   </div>
 
   <script>
-    let tg = window.Telegram.WebApp;
-    let userData = null;
+    // Имитация данных Telegram
+    const tgUser = Telegram?.WebApp?.initDataUnsafe?.user || {
+      id: 123456789,
+      first_name: "Алина",
+      last_name: "Романова",
+      username: "alina_roma",
+      photo_url: "https://i.pravatar.cc/100?u=alina"
+    };
 
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      const user = tg.initDataUnsafe.user;
-      const userId = user.id;
-      const fullName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-      const photoUrl = user.photo_url || '';
-      userData = { user_id: userId, name: fullName, photo: photoUrl };
-      document.getElementById('welcomeName').innerText = `Привет, ${fullName}`;
-      if (photoUrl) document.getElementById('avatar').src = photoUrl;
-    } else {
-      const fallbackId = localStorage.getItem('fake_user_id') || Math.floor(Math.random() * 1000000000);
-      localStorage.setItem('fake_user_id', fallbackId);
-      userData = { user_id: fallbackId, name: 'Пользователь', photo: '' };
-      document.getElementById('welcomeName').innerText = `Привет!`;
+    const userData = {
+      user_id: tgUser.id,
+      name: tgUser.first_name,
+      photo_url: tgUser.photo_url
+    };
+
+    window.userData = userData;
+
+    document.getElementById("userName").innerText = userData.name;
+    document.getElementById("avatarPreview").src = userData.photo_url;
+
+    function showScreen(id) {
+      document.getElementById("welcome").style.display = id === "welcome" ? "block" : "none";
+      document.getElementById("mainScreen").style.display = id === "mainScreen" ? "block" : "none";
     }
 
-    async function registerUser() {
-      const partner = document.getElementById('partner').value.trim();
-      const startDate = document.getElementById('startDate').value;
-
-      if (!partner || !startDate) {
-        document.getElementById('regError').innerText = "Пожалуйста, заполните все поля.";
-        return;
-      }
-
-      const payload = {
-        user_id: userData.user_id,
-        name: userData.name,
-        partner: partner,
-        date: startDate
-      };
-
-      try {
-        const res = await fetch('save_user.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const text = await res.text();
-        if (text.trim() === "OK") {
-          localStorage.setItem('user_data', JSON.stringify(payload));
-          showMainScreen(payload);
+    function checkRegistration() {
+      fetch(`data/user_${userData.user_id}.json`)
+        .then(res => {
+          if (res.ok) return res.json();
+          else throw new Error("Not registered");
+        })
+        .then(data => {
+          document.getElementById("userDisplayName").innerText = userData.name;
+          document.getElementById("userIdDisplay").innerText = "ID: " + userData.user_id;
+          document.getElementById("userAvatar").src = userData.photo_url;
+          showScreen("mainScreen");
           loadActivity();
-        } else {
-          document.getElementById('regError').innerText = "Ошибка при сохранении: " + text;
-        }
-      } catch (e) {
-        document.getElementById('regError').innerText = "Ошибка подключения к серверу";
-        console.error(e);
-      }
+        })
+        .catch(() => {
+          showScreen("welcome");
+        });
     }
 
-    function showMainScreen(data) {
-      document.getElementById('register').classList.add('hidden');
-      document.getElementById('main').classList.remove('hidden');
-      document.getElementById('nameDisplay').innerText = data.name;
-      document.getElementById('partnerDisplay').innerText = data.partner;
-      document.getElementById('dateDisplay').innerText = data.date;
-      if (userData.photo) document.getElementById('avatar').src = userData.photo;
+    function registerUser() {
+      fetch("save_user.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData)
+      }).then(() => {
+        checkRegistration();
+      });
     }
 
-    async function addActivity() {
-      const text = document.getElementById('activityText').value.trim();
-      if (!text) return;
-      const entry = { text, time: new Date().toLocaleString() };
+    function postActivity() {
+      const entry = document.getElementById("activityEntry").value.trim();
+      if (!entry) return alert("Пустое сообщение");
 
-      await fetch('save_activity.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      fetch("save_activity.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: userData.user_id,
+          name: userData.name,
+          photo: userData.photo_url,
           entry: entry
         })
-      });
-
-      document.getElementById('activityText').value = '';
-      loadActivity();
-    }
-
-    async function loadActivity() {
-      const res = await fetch(`load_activity.php?user_id=${userData.user_id}`);
-      const data = await res.json();
-      const container = document.getElementById('activityFeed');
-      container.innerHTML = '';
-      data.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'entry';
-        div.innerHTML = `<b>${item.time}</b><br>${item.text}`;
-        container.prepend(div);
-      });
-    }
-
-    // Автозагрузка при входе
-    window.onload = () => {
-      const saved = localStorage.getItem('user_data');
-      if (saved) {
-        const data = JSON.parse(saved);
-        showMainScreen(data);
+      }).then(() => {
+        document.getElementById("activityEntry").value = "";
         loadActivity();
-      }
-    };
-  </script>
+      });
+    }
 
+    function loadActivity() {
+      fetch("load_activity.php")
+        .then(res => res.json())
+        .then(data => {
+          const feed = document.getElementById("activityFeed");
+          feed.innerHTML = "";
+          data.reverse().forEach(item => {
+            const div = document.createElement("div");
+            div.className = "activity-item";
+            div.innerHTML = `
+              <img src="${item.photo}" />
+              <div><strong>${item.name}</strong><br>${item.entry}</div>
+            `;
+            feed.appendChild(div);
+          });
+        });
+    }
+
+    checkRegistration();
+  </script>
 </body>
 </html>
