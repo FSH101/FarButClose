@@ -1,5 +1,5 @@
 <?php
-$filePath = __DIR__ . "/userdata/global_activity.json";
+$filePath = __DIR__ . "/userdata/user_activity.json";
 
 if (!file_exists($filePath)) {
   echo json_encode([]);
