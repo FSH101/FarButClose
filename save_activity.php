@@ -1,7 +1,5 @@
 <?php
 $data = json_decode(file_get_contents("php://input"), true);
-
-// Сохраняем входящие данные в лог
 file_put_contents(__DIR__ . "/debug.log", print_r($data, true));
 
 if (!$data || !isset($data["user_id"]) || !isset($data["entry"])) {
@@ -18,20 +16,16 @@ if (!$userId) {
 $dir = __DIR__ . "/userdata";
 if (!is_dir($dir)) mkdir($dir, 0777, true);
 
-$filePath = $dir . "/user_activity.json"; // Все записи сохраняются в одном общем файле
-
-// Загружаем существующие записи
+$filePath = $dir . "/user_activity.json";
 $existing = file_exists($filePath) ? json_decode(file_get_contents($filePath), true) : [];
 
-// Добавляем новую запись
+$entry = $data['entry'];
 $existing[] = [
   'user_id' => $userId,
-  'name' => $data['name'],
-  'entry' => $data['entry'],
-  'time' => date("Y-m-d H:i:s") // Добавляем время записи
+  'name' => $data['name'] ?? 'Пользователь',
+  'text' => $entry['text'] ?? '',
+  'time' => $entry['time'] ?? date("Y-m-d H:i:s")
 ];
 
-// Сохраняем обновленную ленту активности
-file_put_contents($filePath, json_encode($existing, JSON_PRETTY_PRINT));
-
+file_put_contents($filePath, json_encode($existing, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 echo "OK";
