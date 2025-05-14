@@ -106,7 +106,7 @@
     async function addActivity() {
       const text = document.getElementById('activityText').value.trim();
       if (!text) return;
-      const entry = { text, time: new Date().toLocaleString() };
+      const entry = text;
 
       await fetch('save_activity.php', {
         method: 'POST',
