@@ -53,12 +53,52 @@
 
     .avatar {
       border-radius: 50%;
-      width: 100px;
-      height: 100px;
+      width: 60px;
+      height: 60px;
       object-fit: cover;
-      margin: 20px auto;
+      margin-right: 12px;
+      border: 2px solid #ff85a2;
+    }
+
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+    }
+
+    .relationship {
+      font-size: 14px;
+      color: #888;
+      text-align: right;
+    }
+
+    .reminder-box {
+      background: #fff7fb;
+      border: 1px dashed #ffb6c1;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+
+    .reminder-box strong {
       display: block;
-      border: 3px solid #ff85a2;
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .disabled-button {
+      background: #f2a7bb;
+      color: #fff;
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .entry {
@@ -76,20 +116,6 @@
       padding: 20px;
       margin-top: 20px;
       border-radius: 16px;
-    }
-
-    #activityFeed .entry {
-      background: #fff7fa;
-      border-left: 4px solid #ff85a2;
-    }
-
-    #questsList .entry {
-      background: #fff7fb;
-    }
-
-    #regError {
-      color: red;
-      font-size: 14px;
     }
 
     .bottom-nav {
@@ -139,9 +165,23 @@
   </div>
 
   <div id="main" class="hidden">
-    <img id="avatar" class="avatar" src="" alt="avatar" />
-    <h2>Привет, <span id="nameDisplay"></span>!</h2>
-    <p>Вы вместе с <span id="partnerDisplay"></span> с <span id="dateDisplay"></span></p>
+    <div class="user-header">
+      <div class="user-info">
+        <img id="avatar" class="avatar" src="" alt="avatar" />
+        <h2 style="margin: 0; font-size: 20px;"><span id="nameDisplay"></span></h2>
+      </div>
+      <div class="relationship">
+        <p>Вы вместе с<br><strong><span id="partnerDisplay"></span></strong><br>с <span id="dateDisplay"></span></p>
+      </div>
+    </div>
+
+    <div class="reminder-box">
+      <strong>Ближайшая дата:</strong>
+      <span>100 дней вместе — через 12 дней</span>
+      <br><br>
+      <button class="disabled-button">+ Добавить дату</button>
+    </div>
+
     <button onclick="resetUser()">Сменить пользователя</button>
 
     <div id="activitySection" class="hidden">
