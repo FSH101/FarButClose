@@ -1,30 +1,31 @@
 <?php
-$data = json_decode(file_get_contents("php://input"), true);
+// Путь к файлу с квестами
+$file = 'quests.json';
 
-// Сохраняем входящие данные в лог
-file_put_contents(__DIR__ . "/debug.log", print_r($data, true));
-
-if (!$data || !isset($data["name"]) || !isset($data["question"]) || !isset($data["answer"])) {
-  http_response_code(400);
-  exit("Invalid data");
+// Загрузка квестов
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if (file_exists($file)) {
+        echo file_get_contents($file);
+    } else {
+        echo json_encode([]);
+    }
 }
 
-$dir = __DIR__ . "/quests";
-if (!is_dir($dir)) mkdir($dir, 0777, true);
-
-$filePath = $dir . "/quests.json"; // Все квесты сохраняются в одном общем файле
-
-// Загружаем существующие квесты
-$existing = file_exists($filePath) ? json_decode(file_get_contents($filePath), true) : [];
-
-// Добавляем новый квест
-$existing[] = [
-  'name' => $data['name'],
-  'question' => $data['question'],
-  'answer' => $data['answer']
-];
-
-// Сохраняем обновленные квесты
-file_put_contents($filePath, json_encode($existing, JSON_PRETTY_PRINT));
-
-echo "OK";
+// Сохранение квестов
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = file_get_contents('php://input');
+    $quests = json_decode($data, true);
+    
+    if (json_last_error() === JSON_ERROR_NONE) {
+        if (file_put_contents($file, json_encode($quests, JSON_PRETTY_PRINT))) {
+            echo "OK";
+        } else {
+            http_response_code(500);
+            echo "Ошибка при сохранении данных.";
+        }
+    } else {
+        http_response_code(400);
+        echo "Некорректный формат данных.";
+    }
+}
+?>
