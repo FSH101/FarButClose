@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Far But Close</title>
   <style>
     body {
@@ -10,112 +10,139 @@
       font-family: "Segoe UI", sans-serif;
       background: linear-gradient(135deg, #fbd3e9, #bb377d);
       color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
     }
-    h1 {
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    .main {
+      padding: 20px;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
       margin-bottom: 10px;
     }
-    .info {
-      margin-bottom: 20px;
-      font-size: 18px;
-    }
-    .pulse {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background-color: rgba(255, 255, 255, 0.2);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-        opacity: 0.7;
-      }
-      50% {
-        transform: scale(1.2);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1);
-        opacity: 0.7;
-      }
-    }
-    #formContainer {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-    }
-    input, button {
-      padding: 10px;
-      margin: 5px;
+    .tab-button {
+      padding: 10px 16px;
+      background-color: #ffffff20;
       border: none;
       border-radius: 8px;
+      color: white;
+      cursor: pointer;
+    }
+    .tab-button.active {
+      background-color: #ffffff40;
+    }
+    #feed {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    #feed p {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    #newPost {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    textarea {
+      width: 100%;
+      height: 60px;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+    }
+    button.send {
+      background-color: #ffffff30;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
     }
   </style>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+  <header>
+    <div>Вы: <span id="userName">...</span> | Партнёр: <span id="partnerName">не назначен</span></div>
+    <div>Монеты: <span id="coinCount">0</span></div>
+  </header>
 
-  <div id="mainContainer">
-    <div class="pulse"></div>
-    <h1>Добро пожаловать, <span id="userName">...</span></h1>
-    <div class="info" id="relationshipInfo">Загрузка данных...</div>
-  </div>
+  <div class="main">
+    <div class="tabs">
+      <button class="tab-button active" onclick="switchFeed('public')">Общая лента</button>
+      <button class="tab-button" onclick="switchFeed('private')">Личная лента</button>
+    </div>
 
-  <div id="formContainer">
-    <h2>Добавление партнёра</h2>
-    <input type="text" id="partnerName" placeholder="Имя партнёра" required />
-    <input type="date" id="startDate" required />
-    <button onclick="submitForm()">Сохранить</button>
+    <div id="feed"></div>
+
+    <form id="newPost" onsubmit="sendPost(event)">
+      <textarea id="postContent" placeholder="Напиши что-то..."></textarea>
+      <button class="send">Отправить</button>
+    </form>
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-
-    const user = tg.initDataUnsafe?.user;
-    const userName = user?.first_name || "Гость";
+    const userName = Telegram.WebApp.initDataUnsafe?.user?.first_name || "Вы";
     document.getElementById("userName").innerText = userName;
 
-    fetch("load_user.php?user_id=" + user?.id)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.partner && data.date) {
-          const partner = data.partner;
-          const date = new Date(data.date);
-          const now = new Date();
-          const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-          document.getElementById("relationshipInfo").innerText =
-            `Вы с ${partner} вместе уже ${diff} дней`;
-        } else {
-          document.getElementById("mainContainer").style.display = "none";
-          document.getElementById("formContainer").style.display = "flex";
-        }
-      })
-      .catch(() => {
-        document.getElementById("mainContainer").style.display = "none";
-        document.getElementById("formContainer").style.display = "flex";
-      });
+    let currentFeed = "public";
 
-    function submitForm() {
-      const partner = document.getElementById("partnerName").value;
-      const date = document.getElementById("startDate").value;
-      fetch("save_user.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: user?.id,
-          partner: partner,
-          date: date,
-        }),
-      }).then(() => location.reload());
+    function switchFeed(type) {
+      currentFeed = type;
+      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+      loadFeed();
     }
+
+    function loadFeed() {
+      fetch(`load_feed.php?type=${currentFeed}`)
+        .then(res => res.json())
+        .then(data => {
+          const feed = document.getElementById("feed");
+          feed.innerHTML = "";
+          data.forEach(entry => {
+            const p = document.createElement("p");
+            p.innerText = entry.name + ": " + entry.text;
+            feed.appendChild(p);
+          });
+        });
+    }
+
+    function sendPost(event) {
+      event.preventDefault();
+      const content = document.getElementById("postContent").value.trim();
+      if (!content) return;
+
+      fetch('save_post.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: currentFeed,
+          name: userName,
+          text: content
+        })
+      }).then(() => {
+        document.getElementById("postContent").value = "";
+        loadFeed();
+      });
+    }
+
+    loadFeed();
   </script>
 </body>
 </html>
