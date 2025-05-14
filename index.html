@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Far But Close</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body { font-family: sans-serif; text-align: center; background: #fafafa; padding: 20px; }
     input, button { padding: 10px; margin: 10px; width: 80%; max-width: 300px; }
@@ -14,8 +15,8 @@
 
   <div id="register">
     <h2>Добро пожаловать в Far But Close</h2>
-    <p>Игра для влюбленных на расстоянии</p>
-    <input type="text" id="tgName" placeholder="Ваше имя">
+    <p>Игра для влюблённых на расстоянии</p>
+    <p id="welcomeName"></p>
     <input type="text" id="partner" placeholder="Имя партнёра">
     <input type="date" id="startDate">
     <button onclick="registerUser()">Начать</button>
@@ -28,41 +29,53 @@
   </div>
 
   <script>
-    let userId = localStorage.getItem('fake_user_id') || Math.floor(Math.random() * 1000000000);
-    localStorage.setItem('fake_user_id', userId);
+    let tg = window.Telegram.WebApp;
+    let userData = null;
+
+    // Получаем данные пользователя Telegram
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      const user = tg.initDataUnsafe.user;
+      const userId = user.id;
+      const fullName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+      userData = { user_id: userId, name: fullName };
+      document.getElementById('welcomeName').innerText = `Привет, ${fullName}`;
+    } else {
+      // Fallback если Telegram недоступен (например, открытие не из Telegram)
+      const fallbackId = localStorage.getItem('fake_user_id') || Math.floor(Math.random() * 1000000000);
+      localStorage.setItem('fake_user_id', fallbackId);
+      userData = { user_id: fallbackId, name: 'Пользователь' };
+      document.getElementById('welcomeName').innerText = `Привет!`;
+    }
 
     async function registerUser() {
-      const tgName = document.getElementById('tgName').value.trim();
       const partner = document.getElementById('partner').value.trim();
       const startDate = document.getElementById('startDate').value;
 
-      if (!tgName || !partner || !startDate) {
+      if (!partner || !startDate) {
         document.getElementById('regError').innerText = "Пожалуйста, заполните все поля.";
         return;
       }
 
-      const userData = {
-        user_id: userId,
-        name: tgName,
+      const payload = {
+        user_id: userData.user_id,
+        name: userData.name,
         partner: partner,
         date: startDate
       };
-
-      console.log("Отправка данных:", userData); // Отладка
 
       try {
         const res = await fetch('save_user.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(userData)
+          body: JSON.stringify(payload)
         });
 
         const text = await res.text();
         console.log("Ответ сервера:", text);
 
         if (text.trim() === "OK") {
-          localStorage.setItem('user_data', JSON.stringify(userData));
-          showMainScreen(userData);
+          localStorage.setItem('user_data', JSON.stringify(payload));
+          showMainScreen(payload);
         } else {
           document.getElementById('regError').innerText = "Ошибка при сохранении: " + text;
         }
