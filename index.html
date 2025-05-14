@@ -10,8 +10,6 @@
       font-family: "Segoe UI", sans-serif;
       background: linear-gradient(135deg, #fbd3e9, #bb377d);
       color: white;
-    }
-    .container {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -19,14 +17,11 @@
       height: 100vh;
       text-align: center;
     }
-    .profile-info {
-      margin-bottom: 20px;
-    }
     .profile-info img {
       width: 100px;
       height: 100px;
       border-radius: 50%;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
     .btn {
       background-color: #ffffff30;
@@ -51,92 +46,83 @@
   </style>
 </head>
 <body>
-  <div class="container" id="registrationContainer">
-    <h1>Добро пожаловать в Far But Close</h1>
-    <div class="profile-info">
-      <img id="userPhoto" src="" alt="Фото профиля">
-      <p id="userName">Загрузка...</p>
-    </div>
-    <div>
-      <input type="text" id="partnerName" class="input-field" placeholder="Введите имя партнёра">
-      <button class="btn" onclick="selectPartner()">Выбрать партнёра через Telegram</button>
-      <button class="btn" onclick="finishRegistration()">Завершить регистрацию</button>
-    </div>
-  </div>
-
-  <div class="container" id="mainContainer" style="display: none;">
-    <h1>Главный экран</h1>
-    <div class="profile-info">
-      <img id="mainUserPhoto" src="" alt="Фото профиля">
-      <p id="mainUserName"></p>
-      <p>Партнёр: <span id="mainPartnerName"></span></p>
-    </div>
-    <button class="btn" onclick="startApp()">Перейти в приложение</button>
-  </div>
+  <div id="content"></div>
 
   <script>
-    // Получаем данные пользователя из Telegram WebApp
-    const userName = Telegram.WebApp.initDataUnsafe?.user?.first_name || "Неизвестный";
-    const userPhoto = Telegram.WebApp.initDataUnsafe?.user?.photo_url || "https://www.example.com/default.jpg"; // Замените на ссылку по умолчанию
+    // Проверяем, есть ли данные о пользователе в локальном хранилище
+    const userData = JSON.parse(localStorage.getItem('userData'));
 
-    document.getElementById("userName").innerText = userName;
-    document.getElementById("userPhoto").src = userPhoto;
-
-    // Проверяем, есть ли уже сохранённые данные пользователя
-    fetch('load_user_data.php')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Если данные есть, переходим на главный экран
-          document.getElementById("registrationContainer").style.display = "none";
-          document.getElementById("mainContainer").style.display = "block";
-          document.getElementById("mainUserName").innerText = userName;
-          document.getElementById("mainUserPhoto").src = userPhoto;
-          document.getElementById("mainPartnerName").innerText = data.partnerName;
-        } else {
-          // Если данных нет, показываем экран регистрации
-          document.getElementById("registrationContainer").style.display = "block";
-          document.getElementById("mainContainer").style.display = "none";
-        }
-      });
-
-    // Функция для выбора партнёра через Telegram
-    function selectPartner() {
-      Telegram.WebApp.openLink('https://t.me/your_telegram_bot'); // Ссылка на бота для выбора партнера
+    // Если данные есть, показываем главный экран, если нет — экран регистрации
+    if (userData) {
+      showMainScreen(userData);
+    } else {
+      showRegistrationScreen();
     }
 
-    // Функция для завершения регистрации
-    function finishRegistration() {
-      const partnerName = document.getElementById("partnerName").value.trim();
-      if (!partnerName) {
-        alert("Пожалуйста, введите имя партнёра.");
-        return;
+    // Функция для отображения экрана регистрации
+    function showRegistrationScreen() {
+      document.getElementById("content").innerHTML = `
+        <h1>Добро пожаловать в Far But Close</h1>
+        <div class="profile-info">
+          <img id="userPhoto" src="" alt="Фото профиля">
+          <p id="userName">Загрузка...</p>
+        </div>
+        <div>
+          <input type="text" id="partnerName" class="input-field" placeholder="Введите имя партнёра">
+          <button class="btn" onclick="selectPartner()">Выбрать партнёра через Telegram</button>
+          <button class="btn" onclick="finishRegistration()">Завершить регистрацию</button>
+        </div>
+      `;
+
+      const userName = Telegram.WebApp.initDataUnsafe?.user?.first_name || "Неизвестный";
+      const userPhoto = Telegram.WebApp.initDataUnsafe?.user?.photo_url || "https://www.example.com/default.jpg";
+
+      document.getElementById("userName").innerText = userName;
+      document.getElementById("userPhoto").src = userPhoto;
+
+      // Функция для выбора партнёра через Telegram
+      function selectPartner() {
+        Telegram.WebApp.openLink('https://t.me/your_telegram_bot');
       }
 
-      // Сохраняем данные в локальном файле на сервере
-      fetch('save_user_data.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userName: userName,
-          userPhoto: userPhoto,
-          partnerName: partnerName
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Перезагружаем страницу, чтобы увидеть главный экран
-          window.location.reload();
-        } else {
-          alert("Ошибка при сохранении данных.");
+      // Функция для завершения регистрации
+      function finishRegistration() {
+        const partnerName = document.getElementById("partnerName").value.trim();
+        if (!partnerName) {
+          alert("Пожалуйста, введите имя партнёра.");
+          return;
         }
-      });
+
+        const userData = {
+          userName,
+          userPhoto,
+          partnerName
+        };
+
+        // Сохраняем данные пользователя в локальном хранилище
+        localStorage.setItem('userData', JSON.stringify(userData));
+
+        // Переходим на главный экран
+        showMainScreen(userData);
+      }
     }
 
-    // Функция для перехода в приложение после регистрации
+    // Функция для отображения главного экрана
+    function showMainScreen(userData) {
+      document.getElementById("content").innerHTML = `
+        <h1>Главный экран</h1>
+        <div class="profile-info">
+          <img id="mainUserPhoto" src="${userData.userPhoto}" alt="Фото профиля">
+          <p id="mainUserName">${userData.userName}</p>
+          <p>Партнёр: <span id="mainPartnerName">${userData.partnerName}</span></p>
+        </div>
+        <button class="btn" onclick="startApp()">Перейти в приложение</button>
+      `;
+    }
+
+    // Функция для перехода в приложение
     function startApp() {
-      window.location.href = 'main_screen.html'; // Переход на основной экран приложения
+      alert('Переход в приложение');
     }
   </script>
 </body>
