@@ -5,7 +5,153 @@
   <title>Far But Close</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #ffd1dc 0%, #ffe4ec 100%);
+      color: #333;
+    }
+
+    #register, #main {
+      padding: 20px;
+      max-width: 420px;
+      margin: 0 auto 80px;
+      background: #fff0f5;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    input, button, textarea {
+      padding: 12px 16px;
+      margin: 10px 0;
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #ff85a2;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #e26d8f;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .avatar {
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      margin-right: 12px;
+      border: 2px solid #ff85a2;
+    }
+
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+    }
+
+    .relationship {
+      font-size: 14px;
+      color: #888;
+      text-align: right;
+    }
+
+    .reminder-box {
+      background: #fff7fb;
+      border: 1px dashed #ffb6c1;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+
+    .reminder-box strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .disabled-button {
+      background: #f2a7bb;
+      color: #fff;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .entry {
+      background: #fff;
+      border: 1px solid #f3c6d1;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 12px;
+      color: #333;
+    }
+
+    .quest {
+      background: #ffe6f0;
+      color: #333;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 16px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 60px;
+      z-index: 1000;
+    }
+
+    .bottom-nav button {
+      all: unset;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .bottom-nav button.active {
+      color: #ff85a2;
+      font-weight: bold;
+    }
+
+    .bottom-nav button img {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 4px;
+    }
+  </style>
 </head>
 <body>
   <div id="register">
@@ -18,12 +164,74 @@
     <div id="regError"></div>
   </div>
 
-  <div id="main" class="hidden"></div>
+  <div id="main" class="hidden">
+    <div class="user-header">
+      <div class="user-info">
+        <img id="avatar" class="avatar" src="" alt="avatar" />
+        <h2 style="margin: 0; font-size: 20px;"><span id="nameDisplay"></span></h2>
+      </div>
+      <div class="relationship">
+        <p>Вы вместе с<br><strong><span id="partnerDisplay"></span></strong><br>с <span id="dateDisplay"></span></p>
+      </div>
+    </div>
 
-  <!-- Скрипт регистрации и инициализации пользователя -->
+    <div class="reminder-box">
+      <strong>Ближайшая дата:</strong>
+      <span>100 дней вместе — через 12 дней</span>
+      <br><br>
+      <button class="disabled-button">+ Добавить дату</button>
+    </div>
+
+    <button onclick="resetUser()">Сменить пользователя</button>
+
+    <div id="activitySection" class="hidden">
+      <h3>Лента активности</h3>
+      <textarea id="activityText" placeholder="Напиши что-нибудь приятное..."></textarea>
+      <button onclick="addActivity()">Добавить в ленту</button>
+      <div id="activityFeed"></div>
+    </div>
+
+    <div id="questsSection" class="hidden">
+      <h3>Доступные квесты</h3>
+      <div id="questsList"></div>
+    </div>
+
+    <div id="quest" class="hidden quest">
+      <h3 id="questTitle"></h3>
+      <p id="questDescription"></p>
+      <input type="text" id="questAnswer" placeholder="Введите ваш ответ">
+      <button onclick="submitQuestAnswer()">Отправить</button>
+      <div id="questResult"></div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button onclick="showSection('activity')">
+      <img src="https://img.icons8.com/ios-filled/50/ff85a2/chat.png" alt="Чат" />
+      Чат
+    </button>
+    <button onclick="showSection('activity')">
+      <img src="https://img.icons8.com/ios-filled/50/ff85a2/news.png" alt="Лента" />
+      Лента
+    </button>
+    <button onclick="showSection('quests')" class="active">
+      <img src="https://img.icons8.com/ios-filled/50/ff85a2/infinity.png" alt="Главная" />
+    </button>
+    <button>
+      <img src="https://img.icons8.com/ios-filled/50/ff85a2/hearts.png" alt="Партнёр" />
+      Партнёр
+    </button>
+    <button>
+      <img src="https://img.icons8.com/ios-filled/50/ff85a2/user.png" alt="Профиль" />
+      Профиль
+    </button>
+  </div>
+
   <script>
     let tg = window.Telegram.WebApp;
     let userData = null;
+    let quests = [];
+    let currentQuest = null;
 
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
       const user = tg.initDataUnsafe.user;
@@ -32,6 +240,7 @@
       const photoUrl = user.photo_url || '';
       userData = { user_id: userId, name: fullName, photo: photoUrl };
       document.getElementById('welcomeName').innerText = `Привет, ${fullName}`;
+      if (photoUrl) document.getElementById('avatar').src = photoUrl;
     } else {
       const fallbackId = localStorage.getItem('fake_user_id') || Math.floor(Math.random() * 1000000000);
       localStorage.setItem('fake_user_id', fallbackId);
@@ -64,7 +273,9 @@
         const text = await res.text();
         if (text.trim() === "OK") {
           localStorage.setItem('user_data', JSON.stringify(payload));
-          window.location.reload(); // перезагрузка, остальное загружается из внешних скриптов
+          showMainScreen(payload);
+          loadActivity();
+          loadQuests();
         } else {
           document.getElementById('regError').innerText = "Ошибка при сохранении: " + text;
         }
@@ -73,21 +284,189 @@
       }
     }
 
+    function showMainScreen(data) {
+      document.getElementById('register').classList.add('hidden');
+      document.getElementById('main').classList.remove('hidden');
+      document.getElementById('nameDisplay').innerText = data.name;
+      document.getElementById('partnerDisplay').innerText = data.partner;
+      document.getElementById('dateDisplay').innerText = data.date;
+      if (userData.photo) document.getElementById('avatar').src = userData.photo;
+    }
+
+    function showSection(section) {
+      document.getElementById('activitySection').classList.add('hidden');
+      document.getElementById('questsSection').classList.add('hidden');
+      document.getElementById('quest').classList.add('hidden');
+
+      if (section === 'activity') {
+        document.getElementById('activitySection').classList.remove('hidden');
+        loadActivity();
+      } else if (section === 'quests') {
+        document.getElementById('questsSection').classList.remove('hidden');
+        loadQuests();
+      }
+    }
+
+    async function loadActivity() {
+      const res = await fetch('load_activity.php');
+      const data = await res.json();
+      const container = document.getElementById('activityFeed');
+      container.innerHTML = '';
+      data.forEach(item => {
+        const name = item.name || 'Пользователь';
+        const time = item.time || '';
+        const text = item.text || '';
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.innerHTML = `<b>${name}</b> <small>${time}</small><br>${text}`;
+        container.prepend(div);
+      });
+    }
+
+    async function addActivity() {
+      const activityText = document.getElementById('activityText').value.trim();
+      if (!activityText) {
+        alert('Пожалуйста, напишите что-нибудь!');
+        return;
+      }
+
+      const activityPayload = {
+        user_id: userData.user_id,
+        name: userData.name,
+        entry: {
+          text: activityText,
+          time: new Date().toLocaleString()
+        }
+      };
+
+      try {
+        const res = await fetch('save_activity.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(activityPayload)
+        });
+
+        const text = await res.text();
+        if (text.trim() === "OK") {
+          document.getElementById('activityText').value = '';
+          loadActivity();
+        } else {
+          alert('Ошибка при сохранении активности: ' + text);
+        }
+      } catch (e) {
+        alert('Ошибка при отправке данных на сервер');
+      }
+    }
+
+    async function loadQuests() {
+      try {
+        const res = await fetch('quests.json');
+        quests = await res.json();
+        displayQuestList();
+      } catch (e) {
+        console.error('Ошибка при загрузке квестов:', e);
+      }
+    }
+
+    function displayQuestList() {
+      const questsList = document.getElementById('questsList');
+      questsList.innerHTML = '';
+      quests.forEach(quest => {
+        const questItem = document.createElement('div');
+        questItem.classList.add('entry');
+        questItem.innerHTML = `<b>${quest.title}</b><br>${quest.description}`;
+        const startButton = document.createElement('button');
+        startButton.innerText = 'Начать квест';
+        startButton.onclick = () => startSpecificQuest(quest);
+        questItem.appendChild(startButton);
+        questsList.appendChild(questItem);
+      });
+    }
+
+    function startSpecificQuest(quest) {
+      currentQuest = quest;
+      document.getElementById('quest').classList.remove('hidden');
+      document.getElementById('questTitle').innerText = quest.title;
+      document.getElementById('questDescription').innerText = quest.description;
+      document.getElementById('questResult').innerText = '';
+      document.getElementById('questAnswer').value = '';
+    }
+
+    function submitQuestAnswer() {
+      const answer = document.getElementById('questAnswer').value.trim();
+      if (!answer) return;
+
+      let resultText = '';
+      if (answer.toLowerCase() === currentQuest.answer.toLowerCase()) {
+        resultText = 'Отлично! Это правильный ответ!';
+      } else {
+        resultText = 'Попробуйте снова!';
+      }
+
+      document.getElementById('questResult').innerText = resultText;
+    }
+
+    function resetUser() {
+      localStorage.removeItem('user_data');
+      window.location.reload();
+    }
+
     window.onload = () => {
       const saved = localStorage.getItem('user_data');
       if (saved) {
         const data = JSON.parse(saved);
-        // дальнейшая логика теперь обрабатывается внешними модулями
-        document.getElementById('register').classList.add('hidden');
-        document.getElementById('main').classList.remove('hidden');
+        showMainScreen(data);
       }
     };
-  </script>
+  // ... [весь предыдущий код]
 
-  <!-- Внешние модули -->
-  <script src="js/ui.js"></script>
-  <script src="js/activity.js"></script>
-  <script src="js/quests.js"></script>
-  <script src="js/dates.js"></script>
+  function showMainScreen(data) {
+    document.getElementById('register').classList.add('hidden');
+    document.getElementById('main').classList.remove('hidden');
+    document.getElementById('nameDisplay').innerText = data.name;
+    document.getElementById('partnerDisplay').innerText = data.partner;
+    document.getElementById('dateDisplay').innerText = data.date;
+    if (userData.photo) document.getElementById('avatar').src = userData.photo;
+
+    updateReminderBox(data.date);
+  }
+
+  function getNextMilestone(startDateStr) {
+    const startDate = new Date(startDateStr);
+    const now = new Date();
+    const daysTogether = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+    const nextMilestone = Math.ceil(daysTogether / 50) * 50 + 50;
+    const milestoneDate = new Date(startDate.getTime() + nextMilestone * 24 * 60 * 60 * 1000);
+    const diffDays = Math.ceil((milestoneDate - now) / (1000 * 60 * 60 * 24));
+
+    return {
+      label: `${nextMilestone} дней вместе`,
+      daysLeft: diffDays
+    };
+  }
+
+  function updateReminderBox(startDateStr) {
+    const box = document.querySelector('.reminder-box span');
+    const milestone = getNextMilestone(startDateStr);
+    box.innerText = `${milestone.label} — через ${milestone.daysLeft} ${getDaysWord(milestone.daysLeft)}`;
+  }
+
+  function getDaysWord(n) {
+    if (n % 10 === 1 && n % 100 !== 11) return 'день';
+    if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'дня';
+    return 'дней';
+  }
+
+  window.onload = () => {
+    const saved = localStorage.getItem('user_data');
+    if (saved) {
+      const data = JSON.parse(saved);
+      showMainScreen(data);
+    }
+  };
+    
+    
+    
+  </script>
 </body>
 </html>
