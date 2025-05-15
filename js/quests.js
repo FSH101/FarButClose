@@ -1,27 +1,47 @@
-function showQuest() {
-  fetch("quests/quests.json")
-    .then(res => res.json())
-    .then(quests => {
-      const today = new Date().toISOString().split("T")[0];
-      const hash = today.replace(/-/g, "");
-      const index = parseInt(hash.slice(-2)) % quests.length;
-      const quest = quests[index];
-      const savedAnswer = localStorage.getItem(`quest-${today}`) || "";
+let quests = [];
+let currentQuest = null;
 
-      document.getElementById("main-content").innerHTML = `
-        <h2>Вопрос дня</h2>
-        <p>${quest.question}</p>
-        <textarea id="answer" placeholder="Ваш ответ...">${savedAnswer}</textarea>
-        <button id="save-answer">Сохранить</button>
-      `;
+async function loadQuests() {
+    try {
+        const response = await fetch("quests/quests.json");
+        quests = await response.json();
+        displayQuestList();
+    } catch (error) {
+        console.error("Ошибка при загрузке квестов:", error);
+    }
+}
 
-      document.getElementById("save-answer").addEventListener("click", () => {
-        const answer = document.getElementById("answer").value;
-        localStorage.setItem(`quest-${today}`, answer);
-        alert("Ответ сохранён!");
-      });
-    })
-    .catch(() => {
-      document.getElementById("main-content").innerHTML = `<p>Не удалось загрузить вопрос дня.</p>`;
+function displayQuestList() {
+    const list = document.getElementById("questList");
+    list.innerHTML = "";
+
+    quests.forEach((quest, index) => {
+        const button = document.createElement("button");
+        button.textContent = quest.title;
+        button.onclick = () => startSpecificQuest(quest);
+        list.appendChild(button);
     });
+}
+
+function startSpecificQuest(quest) {
+    currentQuest = quest;
+    document.getElementById("questText").textContent = quest.text;
+    document.getElementById("answerSection").style.display = "block";
+    document.getElementById("questAnswer").value = "";
+}
+
+function submitQuestAnswer() {
+    const answer = document.getElementById("questAnswer").value;
+    if (!answer.trim()) {
+        alert("Введите ответ.");
+        return;
+    }
+
+    const answerList = document.getElementById("answerList");
+    const li = document.createElement("li");
+    li.textContent = `${currentQuest.title}: ${answer}`;
+    answerList.appendChild(li);
+
+    document.getElementById("answerSection").style.display = "none";
+    currentQuest = null;
 }
