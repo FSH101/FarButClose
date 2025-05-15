@@ -248,7 +248,13 @@
       document.getElementById('welcomeName').innerText = `Привет!`;
     }
 
-    
+    async function registerUser() {
+      const partner = document.getElementById('partner').value.trim();
+      const startDate = document.getElementById('startDate').value;
+      if (!partner || !startDate) {
+        document.getElementById('regError').innerText = "Пожалуйста, заполните все поля.";
+        return;
+      }
 
       const payload = {
         user_id: userData.user_id,
@@ -462,6 +468,5 @@
     
     
   </script>
-   <script src="js/register.js"></script>
 </body>
 </html>
