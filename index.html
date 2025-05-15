@@ -134,6 +134,23 @@
       }
     }
 
+
+function showSection(section) {
+  document.getElementById('activitySection').classList.add('hidden');
+  document.getElementById('questsSection').classList.add('hidden');
+  document.getElementById('quest').classList.add('hidden');
+
+  if (section === 'activity') {
+    document.getElementById('activitySection').classList.remove('hidden');
+    loadActivity(); // вот здесь вызывается каждый раз при открытии
+  } else if (section === 'quests') {
+    document.getElementById('questsSection').classList.remove('hidden');
+    loadQuests();
+  }
+}
+
+
+
     function showMainScreen(data) {
       document.getElementById('register').classList.add('hidden');
       document.getElementById('main').classList.remove('hidden');
