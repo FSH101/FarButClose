@@ -1,37 +1,32 @@
-window.registerUser = async function () {
-  const partner = document.getElementById('partner').value.trim();
-  const startDate = document.getElementById('startDate').value;
-  const errorBox = document.getElementById('regError');
+function registerUser() {
+    const partnerName = document.getElementById("partnerName").value;
+    const startDate = document.getElementById("startDate").value;
 
-  if (!partner || !startDate) {
-    errorBox.innerText = "Пожалуйста, заполните все поля.";
-    return;
-  }
-
-  const payload = {
-    user_id: window.userData.user_id,
-    name: window.userData.name,
-    partner: partner,
-    date: startDate
-  };
-
-  try {
-    const res = await fetch('save_user.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const text = await res.text();
-    if (text.trim() === "OK") {
-      localStorage.setItem('user_data', JSON.stringify(payload));
-      window.showMainScreen(payload);
-      window.loadActivity();
-      window.loadQuests();
-    } else {
-      errorBox.innerText = "Ошибка при сохранении: " + text;
+    if (!partnerName || !startDate) {
+        alert("Пожалуйста, заполните все поля.");
+        return;
     }
-  } catch (e) {
-    errorBox.innerText = "Ошибка подключения к серверу";
-  }
-};
+
+    userData.partner = partnerName;
+    userData.togetherSince = startDate;
+    userData.registered = true;
+
+    showMainScreen(userData);
+}
+
+function showMainScreen(data) {
+    document.getElementById("registerScreen").style.display = "none";
+    document.getElementById("mainScreen").style.display = "block";
+    document.getElementById("mainPartner").textContent = `Вы вместе с ${data.partner}`;
+    updateReminderBox(data.togetherSince);
+    showSection('welcome');
+}
+
+function resetUser() {
+    userData.partner = '';
+    userData.togetherSince = '';
+    userData.registered = false;
+
+    document.getElementById("registerScreen").style.display = "block";
+    document.getElementById("mainScreen").style.display = "none";
+}
