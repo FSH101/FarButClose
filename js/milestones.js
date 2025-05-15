@@ -1,4 +1,13 @@
-// js/Milestones.js
+function showMainScreen(data) {
+  document.getElementById('register').classList.add('hidden');
+  document.getElementById('main').classList.remove('hidden');
+  document.getElementById('nameDisplay').innerText = data.name;
+  document.getElementById('partnerDisplay').innerText = data.partner;
+  document.getElementById('dateDisplay').innerText = data.date;
+  if (data.photo) document.getElementById('avatar').src = data.photo;
+
+  updateReminderBox(data.date);
+}
 
 function getNextMilestone(startDateStr) {
   const startDate = new Date(startDateStr);
@@ -22,6 +31,6 @@ function updateReminderBox(startDateStr) {
 
 function getDaysWord(n) {
   if (n % 10 === 1 && n % 100 !== 11) return 'день';
-  if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'дня';
+  if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'дня';
   return 'дней';
 }
