@@ -231,6 +231,18 @@
       Профиль
     </button>
   </div>
+  <script type="module">
+  import { showSection } from './js/ui.js';
+
+  // Примеры вызова
+  document.getElementById('mainNavButton').addEventListener('click', () => showSection('mainSection'));
+  document.getElementById('chatNavButton').addEventListener('click', () => showSection('chatSection'));
+  document.getElementById('questsNavButton').addEventListener('click', () => showSection('questsSection'));
+  document.getElementById('partnerNavButton').addEventListener('click', () => showSection('partnerSection'));
+
+  // Изначально показываем только главный экран
+  showSection('mainSection');
+</script>
 <!-- Подключение JS файлов -->
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
