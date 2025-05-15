@@ -153,11 +153,6 @@
     }
   </style>
 </head>
-<!-- Перед </body> -->
-<script src="scripts/utils.js"></script>
-<script src="scripts/register.js"></script>
-<script src="scripts/ui.js"></script>
-</body>
 <body>
   <div id="register">
     <h2>Добро пожаловать в Far But Close</h2>
@@ -231,27 +226,13 @@
       Профиль
     </button>
   </div>
-  <script type="module">
-  import { showSection } from './js/ui.js';
 
-  // Примеры вызова
-  document.getElementById('mainNavButton').addEventListener('click', () => showSection('mainSection'));
-  document.getElementById('chatNavButton').addEventListener('click', () => showSection('chatSection'));
-  document.getElementById('questsNavButton').addEventListener('click', () => showSection('questsSection'));
-  document.getElementById('partnerNavButton').addEventListener('click', () => showSection('partnerSection'));
-
-  // Изначально показываем только главный экран
-  showSection('mainSection');
-</script>
-<!-- Подключение JS файлов -->
-<script src="js/utils.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/activity.js"></script>
-<script src="js/partner.js"></script>
-<script src="js/chat.js"></script>
-<script src="js/quests.js"></script>
-<script src="js/main.js"></script>
-</body>
-</html>
+   <script src="js/init.js"></script>
+  <script src="js/register.js"></script>
+  <script src="js/sections.js"></script>
+  <script src="js/activity.js"></script>
+  <script src="js/quests.js"></script>
+  <script src="js/milestones.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
