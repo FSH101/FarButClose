@@ -5,153 +5,7 @@
   <title>Far But Close</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(180deg, #ffd1dc 0%, #ffe4ec 100%);
-      color: #333;
-    }
-
-    #register, #main {
-      padding: 20px;
-      max-width: 420px;
-      margin: 0 auto 80px;
-      background: #fff0f5;
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      margin-top: 20px;
-    }
-
-    input, button, textarea {
-      padding: 12px 16px;
-      margin: 10px 0;
-      width: 100%;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-
-    button {
-      background: #ff85a2;
-      color: white;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-
-    button:hover {
-      background: #e26d8f;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .avatar {
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
-      margin-right: 12px;
-      border: 2px solid #ff85a2;
-    }
-
-    .user-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-    }
-
-    .relationship {
-      font-size: 14px;
-      color: #888;
-      text-align: right;
-    }
-
-    .reminder-box {
-      background: #fff7fb;
-      border: 1px dashed #ffb6c1;
-      padding: 12px;
-      border-radius: 12px;
-      text-align: center;
-      margin: 20px 0;
-      font-size: 14px;
-    }
-
-    .reminder-box strong {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 16px;
-      color: #333;
-    }
-
-    .disabled-button {
-      background: #f2a7bb;
-      color: #fff;
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .entry {
-      background: #fff;
-      border: 1px solid #f3c6d1;
-      margin: 10px 0;
-      padding: 12px;
-      border-radius: 12px;
-      color: #333;
-    }
-
-    .quest {
-      background: #ffe6f0;
-      color: #333;
-      padding: 20px;
-      margin-top: 20px;
-      border-radius: 16px;
-    }
-
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: #fff;
-      border-top: 1px solid #ddd;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      height: 60px;
-      z-index: 1000;
-    }
-
-    .bottom-nav button {
-      all: unset;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-size: 12px;
-      color: #666;
-    }
-
-    .bottom-nav button.active {
-      color: #ff85a2;
-      font-weight: bold;
-    }
-
-    .bottom-nav button img {
-      width: 24px;
-      height: 24px;
-      margin-bottom: 4px;
-    }
-  </style>
+   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="register">
@@ -420,12 +274,43 @@
     };
   // ... [весь предыдущий код]
 
-  
-    
-  </script>
-  
-  <script src="js/Milestones.js"></script>
-<script>
+  function showMainScreen(data) {
+    document.getElementById('register').classList.add('hidden');
+    document.getElementById('main').classList.remove('hidden');
+    document.getElementById('nameDisplay').innerText = data.name;
+    document.getElementById('partnerDisplay').innerText = data.partner;
+    document.getElementById('dateDisplay').innerText = data.date;
+    if (userData.photo) document.getElementById('avatar').src = userData.photo;
+
+    updateReminderBox(data.date);
+  }
+
+  function getNextMilestone(startDateStr) {
+    const startDate = new Date(startDateStr);
+    const now = new Date();
+    const daysTogether = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+    const nextMilestone = Math.ceil(daysTogether / 50) * 50 + 50;
+    const milestoneDate = new Date(startDate.getTime() + nextMilestone * 24 * 60 * 60 * 1000);
+    const diffDays = Math.ceil((milestoneDate - now) / (1000 * 60 * 60 * 24));
+
+    return {
+      label: `${nextMilestone} дней вместе`,
+      daysLeft: diffDays
+    };
+  }
+
+  function updateReminderBox(startDateStr) {
+    const box = document.querySelector('.reminder-box span');
+    const milestone = getNextMilestone(startDateStr);
+    box.innerText = `${milestone.label} — через ${milestone.daysLeft} ${getDaysWord(milestone.daysLeft)}`;
+  }
+
+  function getDaysWord(n) {
+    if (n % 10 === 1 && n % 100 !== 11) return 'день';
+    if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'дня';
+    return 'дней';
+  }
+
   window.onload = () => {
     const saved = localStorage.getItem('user_data');
     if (saved) {
@@ -433,6 +318,9 @@
       showMainScreen(data);
     }
   };
-</script>
+    
+    
+    
+  </script>
 </body>
 </html>
