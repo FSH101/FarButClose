@@ -7,7 +7,34 @@ async function registerUser() {
     return;
   }
 
-  // Здесь можно добавить сохранение в localStorage или отправку на сервер
-  console.log("Регистрация прошла успешно:", partner, startDate);
-  alert(`Вы зарегистрированы с ${partner} с даты ${startDate}`);
+  // Получаем user_id из Telegram WebApp (примерно так, если ты используешь Telegram.initDataUnsafe)
+  const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'test_user';
+
+  const data = {
+    user_id: userId,
+    name: '', // если есть имя, можешь добавить
+    partner: partner,
+    date: startDate
+  };
+
+  try {
+    const response = await fetch('save_user.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await response.text();
+
+    if (result === "OK") {
+      alert("Регистрация успешна!");
+    } else {
+      document.getElementById('regError').innerText = "Ошибка при сохранении данных.";
+    }
+  } catch (error) {
+    console.error("Ошибка:", error);
+    document.getElementById('regError').innerText = "Сетевая ошибка.";
+  }
 }
